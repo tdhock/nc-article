@@ -5,98 +5,114 @@
 \newcommand{\sectionrex}{Comparing \pkg{namedCapture} variable argument syntax with \pkg{rex}}
 \newcommand{\sectioncomparisons}{Comparisons with other R packages}
 
-\title{A new syntax for regular expressions and reshaping using data
-  tables and the \pkg{nc} package}
+\title{Regular expressions and reshaping using data tables and the
+  \pkg{nc} package}
 
 \author{by Toby Dylan Hocking}
 
 \maketitle
 
-\abstract{Regular expressions are powerful tools for manipulating
-  non-tabular text data. For many tasks (visualization, machine
-  learning, etc), tables of numbers must be extracted from such data
-  before processing by other R functions. We present the R package
-  \pkg{namedCapture}, which facilitates such tasks by providing a new
-  user-friendly syntax for defining regular expressions in R code. We
-  begin by describing the history of regular expressions and their
-  usage in R. We then describe the new features of the namedCapture
-  package, and provide detailed comparisons with related R packages
-  (\pkg{rex}, \pkg{stringr}, \pkg{stringi}, \pkg{tidyr},
-  \pkg{rematch2}, \pkg{re2r}).}
+\abstract{Regular expressions are powerful tools for extracting tables
+  from non-tabular text data. Capturing regular expressions that
+  describe information to extract from column names can be especially
+  useful when reshaping a data table from wide (one row with many
+  columns) to tall (one column with many rows). We present the R
+  package \pkg{nc}, which provides functions for data reshaping,
+  regular expressions, and a uniform interface to three C libraries
+  (PCRE, RE2, ICU). We describe the main features of \pkg{nc}, then
+  provide detailed comparisons with related R packages (\pkg{stats},
+  \pkg{utils}, \pkg{data.table}, \pkg{tidyr}, \pkg{reshape2},
+  \pkg{cdata}).}
 
 \section{Introduction}
 
-Today regular expression libraries are powerful and widespread tools
-for text processing. A regular expression \dfn{pattern} is
-typically a character string that defines a set of possible
-\dfn{matches} in some other \dfn{subject} strings. For example
-the pattern \code{o+} matches one or more lower-case o characters; it
-would match the last two characters in the subject \code{foo}, and it
-would not match in the subject \code{bar}. 
+Regular expressions are powerful tools for text processing that are
+available in many programming languages, including R. A regular
+expression \dfn{pattern} defines a set of \dfn{matches} in a
+\dfn{subject} string. For example, the pattern \code{.*[.].*} matches
+zero or more non-newline characters, followed by a period, followed by
+zero or more non-newline characters. It would match the subjects
+\code{Sepal.Length} and \code{Petal.Width}, but it would not match in
+the subject \code{Species}.
 
-The focus of this article is regular expressions with capture groups,
-which are used to extract subject substrings. Capture groups are
+The focus of this article is patterns with capture groups, which are
 typically defined using parentheses. For example, the pattern
-\code{[0-9]+} matches one or more digits (e.g.\ \code{123} but not
-\code{abc}), and the pattern \code{[0-9]+-[0-9]+} matches a range of
-integers (e.g.\ \code{9-5}). The pattern \code{([0-9]+)-([0-9]+)} will
-perform matching identically, but provides access by number/index to
-the strings matched by the capturing sub-patterns enclosed in
-parentheses (group 1 matches \code{9}, group 2 matches \code{5}). The
-pattern \code{(?P<start>[0-9]+)-(?P<end>[0-9]+)} further provides access
-by name to the captured sub-strings (\code{start} group matches
-\code{9}, \code{end} group matches \code{5}). In R named capture
-groups are useful in order to create more readable regular expressions
-(names document the purpose of each sub-pattern), and to create more
-readable \R\ code (it is easier to understand the intent of named references than
-numbered references).
+\code{(.*)[.](.*)} results in the same matches as the pattern in the
+previous paragraph, and it additionally allows the user to capture and
+extract the substrings by group index (e.g. group 1 matches
+\code{Sepal}, group 2 matches \code{Length}).
+
+Named capture groups allow extracting the a substring by name rather
+than by index. Using names rather than indices is useful in order to
+create more readable regular expressions (names document the purpose
+of each sub-pattern), and to create more readable \R\ code (it is
+easier to understand the intent of named references than numbered
+references). For example, the pattern
+\code{(?<part>.*)[.](?<dimension>.*)} documents that the flower part
+appears before the measurement dimension; the \code{part} group
+matches \code{Sepal} and the \code{dimension} group matches
+\code{Length}.
+
+Recently, \citet{HOCKING2019-namedCapture} proposed a new syntax for
+defining named capture groups in R code. Using this new syntax, the
+pattern in the previous paragraph can be written as \code{part=".*",
+  "[.]", dimension=".*"}. 
 
 In this article our original contribution is the \R\ package
-\CRANpkg{namedCapture} which provides several new features for named capture
-regular expressions. The main new ideas are (1) group-specific type
-conversion functions, (2) a user-friendly syntax for defining group
-names with \R\ argument names, and (3) named output based on subject names and the
-\code{name} capture group. 
+\CRANpkg{nc} which provides a new implementation of the previously
+proposed syntax for named capture regular expressions, in addition to
+several new features for data reshaping. The main new ideas are (1)
+using un-named groups to provide a uniform interface to three regex C
+libraries, (2) integration of regex and \pkg{data.table}
+functionality, and (3) specifying wide-to-tall reshape operations with
+a new syntax which results in less repetitive user code than other
+packages.
 
 The organization of this article is as follows. The rest of this
-introduction provides a brief history of regular expressions and their
-usage in \R, then gives an overview of current \R\ packages for
-regular expressions. The second section describes the proposed
-functions of the \pkg{namedCapture} package. The third section
-provides detailed comparisons with other \R\ packages, in terms of
-syntax and computation times. The article concludes with a summary and
+introduction provides an overview of current \R\ packages for regular
+expressions and data reshaping. The second section describes the
+proposed functions of the \pkg{nc} package. The third section provides
+detailed comparisons with other \R\ packages, in terms of syntax and
+computation times. The article concludes with a summary and
 discussion.
 
 \section{Related work}
 
 
 \begin{table}
+  \centering
   \begin{tabular}{llllllll}
 \toprule
-\code{pkg::function} & single & multiple & regex & na.rm & types &
-list \\
+\code{pkg::function} & single & multiple & regex & na.rm & types & list \\
 \midrule
-\code{nc::capture\_first\_melt\_multiple} & no & unsort & capture &
-yes & any & yes\\
-\code{nc::capture\_first\_melt} & yes & no & capture & yes & any
-& yes\\
-\code{tidyr::pivot\_longer} & yes & unsort & capture & yes &
-some & yes\\
-\code{stats::reshape} & yes & sort & match & no & no & no\\
-\code{data.table::melt}, \code{patterns} & yes & sort & match & yes & no &
-yes\\
+\code{nc::capture\_melt\_multiple} & no & unsorted & capture & yes & any & yes\\
+\code{nc::capture\_melt\_single} & yes & no & capture & yes & any & yes\\
+\code{tidyr::pivot\_longer} & yes & unsorted & capture & yes & some & yes\\
+\code{stats::reshape} & yes & sorted & match & no & no & no\\
+\code{data.table::melt}, \code{patterns} & yes & sorted & match & yes & no & yes\\
 \code{tidyr::gather} & yes & no & no & yes & some & yes\\
 \code{reshape2::melt} & yes & no & no & yes & no & no\\
-\code{cdata::rowrecs\_to\_blocks} & yes & unsort & no & no &
-no & yes\\
+\code{cdata::rowrecs\_to\_blocks} & yes & unsorted & no & no &no & yes\\
 \code{utils::stack} & yes & no & no & no & no & no\\
 \bottomrule
     \end{tabular}
-    \caption{\label{tab:features} Features of reshaping functions available in R.}
+    \caption{\label{tab:features} 
+      Reshaping functions in R support various features:
+      ``single'' for converting input columns into a single output column; 
+      ``multiple'' for converting input columns 
+      (either ``sorted'' in a regular order, or ``unsorted'' for any order) 
+      into multiple output columns of different types;
+      ``regex'' for regular expressions to 
+      only ``match'' input column names or to
+      ``capture'' and create new output column names;
+      ``na.rm'' for removal of missing values;
+      ``types'' for converting input column names to non-character output columns;
+      ``list'' for output of list columns.
+    }
 \end{table}
 
 <<load>>=
-nc::capture_first_melt
+nc::capture_melt_single
 
 @ 
 
