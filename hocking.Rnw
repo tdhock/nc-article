@@ -65,18 +65,58 @@ clarity and/or re-used using
 lists, and numeric data may be extracted by specifying group-specific
 type conversion functions.
 
+A main thesis of this article is that regular expressions can greatly
+simplify the code required to specify wide-to-tall data reshaping
+operations. For one such operation the input is a ``wide'' table with
+many columns, and the desired output is a ``tall'' table with more
+rows, and some of the input columns converted into a smaller number of
+output columns (Figure~\ref{fig:wide-to-tall}). We refer to the
+columns involved in this conversion as ``data input columns'' and
+``data output columns''; the output may include additional columns
+with values captured from the input column names. For example the wide
+iris data (W in Figure~\ref{fig:wide-to-tall}) have four data input
+columns: \code{Sepal.Length}, \code{Sepal.Width}, \code{Petal.Length},
+\code{Petal.Width}. For some purposes (e.g. displaying a histogram of
+each data input column) the desired reshaping operation results in a
+table with a single data output column (S in
+Figure~\ref{fig:wide-to-tall}) and two columns captured from input
+names. For other purposes (e.g. scatterplot to compare Petal and Sepal
+sizes) the desired reshaping operation results in a table with
+multiple data output columns (M1 and M2 in
+Figure~\ref{fig:wide-to-tall}). We propose to use the new regular
+expression syntax of \citet{HOCKING2019-namedCapture},
+e.g. \code{part=".*",} \code{"[.]",} \code{dimension=".*"}, to define
+both types of wide-to-tall data reshaping operations. In particular,
+we propose using a single capturing regular expression for both (1)
+defining the subset of data input columns to convert, and (2)
+capturing additional output columns from the input column names. We
+will show that this results in a simple, powerful, non-repetitive
+syntax for wide-to-tall data reshaping.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure-1-iris}
+  \caption{Wide data input columns (W, black) can be reshaped to a
+    single data output column (S, blue) or multiple data output
+    columns (M1, M2, red). Rectangle background indicates column type
+    (white for data, grey for columns with values that come from text
+    captured from input column names). }
+  \label{fig:wide-to-tall}
+\end{figure}
+
 In this article our original contribution is the \R\ package
 \CRANpkg{nc} which provides a new implementation of the previously
-proposed syntax for named capture regular expressions, in addition to
-several new features for data reshaping. The main new ideas are (1)
-using un-named capture groups in the regex string literal to provide a
-uniform interface to three regex C libraries, (2) integration of
-capture groups and \CRANpkg{data.table} functionality
-\citep{Dowle2019}, and (3) specifying wide-to-tall reshape operations
-with a concise syntax which results in less repetitive user code than
-other packages. A secondary contribution of this article is a detailed
-comparison of current R functions for reshaping data with regular
-expressions.
+proposed named capture regex syntax of
+\citet{HOCKING2019-namedCapture}, in addition to several new functions
+that perform wide-to-tall data reshaping using regular
+expressions. The main new ideas are (1) using un-named capture groups
+in the regex string literal to provide a uniform interface to three
+regex C libraries, (2) integration of capture groups and
+\CRANpkg{data.table} functionality \citep{Dowle2019}, and (3)
+specifying wide-to-tall reshape operations with a concise syntax which
+results in less repetitive user code than other packages. A secondary
+contribution of this article is a detailed comparison of current R
+functions for reshaping data with regular expressions.
 
 The organization of this article is as follows. The rest of this
 introduction provides an overview of current \R\ packages for regular
@@ -89,7 +129,7 @@ discussion.
 \section{Related work}
 
 There are many R functions which can extract tables from non-tabular
-text using regular expressions. Base R includes \code{base::regexpr}
+text using regular expressions. Recommended R package functions include \code{base::regexpr}
 and \code{base::gregexpr} as well as \code{utils::strcapture}. CRAN
 packages include 
 \CRANpkg{namedCapture} \citep{namedCapture}, 
@@ -106,7 +146,8 @@ in terms of features, syntax, and computation time.
 For reshaping data from wide (one row with many columns) to tall (one
 column with many rows), there are several different R functions that
 provide similar functionality. Each function supports a different set
-of features (Table~\ref{tab:features}):
+of features (Table~\ref{tab:features}); each feature/column is
+explained in detail below:
 \begin{description}
 \item[single] refers to support for converting input columns
   of the same type to a single output column.
@@ -131,8 +172,55 @@ of features (Table~\ref{tab:features}):
 \item[list] refers to support for output of list columns.
 \end{description}
 
-Base R provides \code{stats::reshape} and \code{utils::stack} for
-reshaping data from wide to tall. TODO
+
+\begin{table}
+  \centering
+  \begin{tabular}{llllllll}
+\toprule
+\code{pkg::function} & single & multiple & regex & na.rm & types & list \\
+\midrule
+\code{nc::capture\_melt\_multiple} & no & unsorted & capture & yes & any & yes\\
+\code{nc::capture\_melt\_single} & yes & no & capture & yes & any & yes\\
+\code{tidyr::pivot\_longer} & yes & unsorted & capture & yes & some & yes\\
+\code{stats::reshape} & yes & sorted & capture & no & some & no\\
+\code{data.table::melt}, \code{patterns} & yes & sorted & match & yes & no & yes\\
+\code{tidyr::gather} & yes & no & no & yes & some & yes\\
+\code{reshape2::melt} & yes & no & no & yes & no & no\\
+\code{cdata::rowrecs\_to\_blocks} & yes & unsorted & no & no &no & yes\\
+\code{cdata::unpivot\_to\_blocks} & yes & no & no & no &no & yes\\
+\code{utils::stack} & yes & no & no & no & no & no\\
+\bottomrule
+    \end{tabular}
+    \caption{\label{tab:features} 
+      Reshaping functions in R support various features:
+      ``single'' for converting input columns into a single output column; 
+      ``multiple'' for converting input columns 
+      (either ``sorted'' in a regular order, or ``unsorted'' for any order) 
+      into multiple output columns of different types;
+      ``regex'' for regular expressions to 
+      ``match'' input column names or to
+      ``capture'' and create new output column names;
+      ``na.rm'' for removal of missing values;
+      ``types'' for converting input column names to non-character output columns;
+      ``list'' for output of list columns.
+    }
+\end{table}
+
+Recommended R package functions include \code{stats::reshape} and
+\code{utils::stack} for reshaping data from wide to tall. Of the
+features listed in Table~\ref{tab:features}, \code{utils::stack} only
+supports single column output, whereas \code{stats::reshape} supports
+the following features. For data with regular input column names (output
+column, separator, time value), regular expressions can be used to
+specify the separator (e.g. in \code{Sepal.Length}, \code{Sepal} is
+output column, dot is separator, \code{Length} is time
+value). Multiple output columns are supported, but incorrect output
+may be computed if input columns are not sorted in a regular
+order. The time value is captured by default to an output column named
+\code{time}. Automatic type conversion is performed on time values
+when possible, but custom type conversion functions are not
+supported. There is neither support for missing value removal nor list
+column output.
 
 The \pkg{tidyr} package provides two functions for reshaping data from
 wide to tall format: \code{gather} and \code{pivot\_longer}. The older
@@ -172,41 +260,16 @@ supported in \pkg{data.table} but not \pkg{reshape2}.
 
 The \CRANpkg{cdata} package provides several functions for data
 reshaping, including \code{rowrecs\_to\_blocks} and
-\code{unpivot\_to\_blocks} which can convert data from tall to wide
-\citep{Mount2019}. TODO
-
-\begin{table}
-  \centering
-  \begin{tabular}{llllllll}
-\toprule
-\code{pkg::function} & single & multiple & regex & na.rm & types & list \\
-\midrule
-\code{nc::capture\_melt\_multiple} & no & unsorted & capture & yes & any & yes\\
-\code{nc::capture\_melt\_single} & yes & no & capture & yes & any & yes\\
-\code{tidyr::pivot\_longer} & yes & unsorted & capture & yes & some & yes\\
-\code{stats::reshape} & yes & sorted & match & no & no & no\\
-\code{data.table::melt}, \code{patterns} & yes & sorted & match & yes & no & yes\\
-\code{tidyr::gather} & yes & no & no & yes & some & yes\\
-\code{reshape2::melt} & yes & no & no & yes & no & no\\
-\code{cdata::rowrecs\_to\_blocks} & yes & unsorted & no & no &no & yes\\
-\code{cdata::unpivot\_to\_blocks} & yes & no & no & no &no & yes\\
-\code{utils::stack} & yes & no & no & no & no & no\\
-\bottomrule
-    \end{tabular}
-    \caption{\label{tab:features} 
-      Reshaping functions in R support various features:
-      ``single'' for converting input columns into a single output column; 
-      ``multiple'' for converting input columns 
-      (either ``sorted'' in a regular order, or ``unsorted'' for any order) 
-      into multiple output columns of different types;
-      ``regex'' for regular expressions to 
-      only ``match'' input column names or to
-      ``capture'' and create new output column names;
-      ``na.rm'' for removal of missing values;
-      ``types'' for converting input column names to non-character output columns;
-      ``list'' for output of list columns.
-    }
-\end{table}
+\code{unpivot\_to\_blocks} which can convert data from wide to tall
+\citep{Mount2019}. The simpler of the two functions is
+\code{unpivot\_to\_blocks}, which supports a single output column
+(interface similar to \code{reshape2::melt}/\code{tidyr::gather}). The
+user of \code{rowrecs\_to\_blocks} must provide a control table that
+describes how the input should be reshaped into the output. It
+therefore supports multiple output columns, for possibly unsorted
+input columns. Both functions support list column output, but other
+features from Table~\ref{tab:features} are not supported (regular
+expressions, missing value removal, type conversion).
 
 <<load>>=
 nc::capture_melt_single
