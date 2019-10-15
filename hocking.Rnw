@@ -69,11 +69,14 @@ In this article our original contribution is the \R\ package
 \CRANpkg{nc} which provides a new implementation of the previously
 proposed syntax for named capture regular expressions, in addition to
 several new features for data reshaping. The main new ideas are (1)
-using un-named groups to provide a uniform interface to three regex C
-libraries, (2) integration of regex capture groups and \CRANpkg{data.table}
-functionality \citep{Dowle2019}, and (3) specifying wide-to-tall reshape operations with
-a concise syntax which results in less repetitive user code than other
-packages.
+using un-named capture groups in the regex string literal to provide a
+uniform interface to three regex C libraries, (2) integration of
+capture groups and \CRANpkg{data.table} functionality
+\citep{Dowle2019}, and (3) specifying wide-to-tall reshape operations
+with a concise syntax which results in less repetitive user code than
+other packages. A secondary contribution of this article is a detailed
+comparison of current R functions for reshaping data with regular
+expressions.
 
 The organization of this article is as follows. The rest of this
 introduction provides an overview of current \R\ packages for regular
@@ -85,8 +88,92 @@ discussion.
 
 \section{Related work}
 
+There are many R functions which can extract tables from non-tabular
+text using regular expressions. Base R includes \code{base::regexpr}
+and \code{base::gregexpr} as well as \code{utils::strcapture}. CRAN
+packages include 
+\CRANpkg{namedCapture} \citep{namedCapture}, 
+\CRANpkg{rematch2} \citep{rematch2},
+\CRANpkg{rex} \citep{rex},
+\CRANpkg{stringr} \citep{stringr},
+\CRANpkg{stringi} \citep{stringi},
+\CRANpkg{tidyr} \citep{tidyr},
+and
+\CRANpkg{re2r} \citep{re2r}.
+\citet{HOCKING2019-namedCapture} provides a detailed comparison of these packages 
+in terms of features, syntax, and computation time.
 
+For reshaping data from wide (one row with many columns) to tall (one
+column with many rows), there are several different R functions that
+provide similar functionality. Each function supports a different set
+of features (Table~\ref{tab:features}):
+\begin{description}
+\item[single] refers to support for converting input columns
+  of the same type to a single output column.
+\item[multiple] refers to support for converting input columns of
+  possibly different types to multiple output columns; ``sorted''
+  means that conversion works correctly only if the columns are sorted
+  in a regular order, e.g. \code{Sepal.Length}, \code{Sepal.Width},
+  \code{Petal.Length}, \code{Petal.Width}; ``unsorted'' means that
+  conversion works correctly even if the columns are not sorted,
+  e.g. \code{Sepal.Length}, \code{Sepal.Width}, \code{Petal.Width},
+  \code{Petal.Length}.
+\item[regex] refers to support for regular expressions; ``match''
+  means a pattern is used to match the input column names; ``capture''
+  means that the capture groups in the specified pattern are used to
+  create new output columns, which is especially useful when the names
+  consist of several distinct variables, e.g. \code{Sepal.Length};
+  ``no'' means that regular expressions are not directly supported
+  (although \code{base::grep} can always be used).
+\item[na.rm] refers to support for removing missing values.
+\item[types] refers to support for converting captured text to numeric
+  output columns.
+\item[list] refers to support for output of list columns.
+\end{description}
 
+Base R provides \code{stats::reshape} and \code{utils::stack} for
+reshaping data from wide to tall. TODO
+
+The \pkg{tidyr} package provides two functions for reshaping data from
+wide to tall format: \code{gather} and \code{pivot\_longer}. The older
+\code{gather} function only supports converting input columns to a
+single output column (not multiple). The input columns to convert may
+not be directly specified using regular expressions; instead R
+expressions such as \code{x:y} can be used to indicate all columns
+starting from \code{x} and ending with \code{y}. It does support
+limited type conversion; if the \code{convert=TRUE} argument is
+specified, the \code{utils::type.convert} function is used to convert
+the input column names to numeric, integer, or logical. In contrast
+the newer \code{pivot\_longer} also supports multiple output columns
+(even if input columns are unsorted), and regular expressions for
+capturing new output columns from the input column names (but
+\code{grep} must be used to specify the input columns to
+convert). Limited type conversion is also supported in
+\code{pivot\_longer}, via the \code{names\_ptypes} argument, which
+should be a list with names corresponding to output columns and values
+corresponding to prototypes (zero-length atomic vectors,
+e.g. \code{numeric()}). Both functions support list columns and
+removing missing values, although different arguments are used
+(\code{na.rm} for \code{gather}, \code{values\_drop\_na} for
+\code{pivot\_longer}).
+
+The \CRANpkg{reshape2} and \pkg{data.table} packages each provide a
+\code{melt} function for converting data from wide to tall
+\citep{Wickham2007, Dowle2019}. The older \pkg{reshape2} version only
+supports converting input columns to a single output column, whereas
+the newer \pkg{data.table} version also supports multiple output
+columns. Regular expressions are not supported in \pkg{reshape2}, but
+can be used with \code{data.table::patterns} to match input column
+names to convert (although the output can be incorrect if columns are
+not sorted in a regular order). Neither function supports type
+conversion, and both functions support removing missing values from
+the output using the \code{na.rm} argument. List column output is
+supported in \pkg{data.table} but not \pkg{reshape2}.
+
+The \CRANpkg{cdata} package provides several functions for data
+reshaping, including \code{rowrecs\_to\_blocks} and
+\code{unpivot\_to\_blocks} which can convert data from tall to wide
+\citep{Mount2019}. TODO
 
 \begin{table}
   \centering
@@ -102,6 +189,7 @@ discussion.
 \code{tidyr::gather} & yes & no & no & yes & some & yes\\
 \code{reshape2::melt} & yes & no & no & yes & no & no\\
 \code{cdata::rowrecs\_to\_blocks} & yes & unsorted & no & no &no & yes\\
+\code{cdata::unpivot\_to\_blocks} & yes & no & no & no &no & yes\\
 \code{utils::stack} & yes & no & no & no & no & no\\
 \bottomrule
     \end{tabular}
