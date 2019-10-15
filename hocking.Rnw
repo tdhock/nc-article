@@ -54,29 +54,38 @@ matches \code{Sepal} and the \code{dimension} group matches
 \code{Length}.
 
 Recently, \citet{HOCKING2019-namedCapture} proposed a new syntax for
-defining named capture groups in R code. Using this new syntax, the
-pattern in the previous paragraph can be written as \code{part=".*",
-  "[.]", dimension=".*"}. 
+defining named capture groups in R code. Using this new syntax,
+named capture groups are specified using R arguments, 
+which results in code that is easier to read and modify than 
+capture groups defined in string literals. For example, the
+pattern in the previous paragraph can be written as \code{part=".*",}
+\code{"[.]",} \code{dimension=".*"}. 
+Sub-patterns can be grouped for 
+clarity and/or re-used using
+lists, and numeric data may be extracted by specifying group-specific
+type conversion functions.
 
 In this article our original contribution is the \R\ package
 \CRANpkg{nc} which provides a new implementation of the previously
 proposed syntax for named capture regular expressions, in addition to
 several new features for data reshaping. The main new ideas are (1)
 using un-named groups to provide a uniform interface to three regex C
-libraries, (2) integration of regex and \pkg{data.table}
-functionality, and (3) specifying wide-to-tall reshape operations with
-a new syntax which results in less repetitive user code than other
+libraries, (2) integration of regex capture groups and \CRANpkg{data.table}
+functionality \citep{Dowle2019}, and (3) specifying wide-to-tall reshape operations with
+a concise syntax which results in less repetitive user code than other
 packages.
 
 The organization of this article is as follows. The rest of this
 introduction provides an overview of current \R\ packages for regular
 expressions and data reshaping. The second section describes the
-proposed functions of the \pkg{nc} package. The third section provides
+proposed functions of the \CRANpkg{nc} package. The third section provides
 detailed comparisons with other \R\ packages, in terms of syntax and
 computation times. The article concludes with a summary and
 discussion.
 
 \section{Related work}
+
+
 
 
 \begin{table}
