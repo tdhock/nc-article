@@ -55,12 +55,12 @@ matches \code{Sepal} and the \code{dimension} group matches
 
 Recently, \citet{HOCKING2019-namedCapture} proposed a new syntax for
 defining named capture groups in R code. Using this new syntax,
-named capture groups are specified using R arguments, 
-which results in code that is easier to read and modify than 
+named capture groups are specified using named arguments in R,
+which results in code that is easier to read and modify than
 capture groups defined in string literals. For example, the
 pattern in the previous paragraph can be written as \code{part=".*",}
-\code{"[.]",} \code{dimension=".*"}. 
-Sub-patterns can be grouped for 
+\code{"[.]",} \code{dimension=".*"}.
+Sub-patterns can be grouped for
 clarity and/or re-used using
 lists, and numeric data may be extracted by specifying group-specific
 type conversion functions.
@@ -77,20 +77,20 @@ with values captured from the input column names. For example the wide
 iris data (W in Figure~\ref{fig:wide-to-tall}) have four data input
 columns: \code{Sepal.Length}, \code{Sepal.Width}, \code{Petal.Length},
 \code{Petal.Width}. For some purposes (e.g. displaying a histogram of
-each data input column) the desired reshaping operation results in a
-table with a single data output column (S in
-Figure~\ref{fig:wide-to-tall}) and two columns captured from input
-names. For other purposes (e.g. scatterplot to compare Petal and Sepal
-sizes) the desired reshaping operation results in a table with
-multiple data output columns (M1 and M2 in
+each data input column using facets in \CRANpkg{ggplot2}) the desired
+reshaping operation results in a table with a single data output
+column (S in Figure~\ref{fig:wide-to-tall}) and two columns captured
+from input names. For other purposes (e.g. scatterplot to compare
+Petal and Sepal sizes) the desired reshaping operation results in a
+table with multiple data output columns (M1 in
 Figure~\ref{fig:wide-to-tall}). We propose to use the new regular
 expression syntax of \citet{HOCKING2019-namedCapture},
 e.g. \code{part=".*",} \code{"[.]",} \code{dimension=".*"}, to define
 both types of wide-to-tall data reshaping operations. In particular,
 we propose using a single capturing regular expression for both (1)
 defining the subset of data input columns to convert, and (2)
-capturing additional output columns from the input column names. We
-will show that this results in a simple, powerful, non-repetitive
+capturing additional output columns from the input column names. This
+We will show that this results in a simple, powerful, non-repetitive
 syntax for wide-to-tall data reshaping.
 
 \begin{figure}
@@ -131,8 +131,8 @@ discussion.
 There are many R functions which can extract tables from non-tabular
 text using regular expressions. Recommended R package functions include \code{base::regexpr}
 and \code{base::gregexpr} as well as \code{utils::strcapture}. CRAN
-packages include 
-\CRANpkg{namedCapture} \citep{namedCapture}, 
+packages include
+\CRANpkg{namedCapture} \citep{namedCapture},
 \CRANpkg{rematch2} \citep{rematch2},
 \CRANpkg{rex} \citep{rex},
 \CRANpkg{stringr} \citep{stringr},
@@ -140,7 +140,7 @@ packages include
 \CRANpkg{tidyr} \citep{tidyr},
 and
 \CRANpkg{re2r} \citep{re2r}.
-\citet{HOCKING2019-namedCapture} provides a detailed comparison of these packages 
+\citet{HOCKING2019-namedCapture} provides a detailed comparison of these packages
 in terms of features, syntax, and computation time.
 
 For reshaping data from wide (one row with many columns) to tall (one
@@ -191,13 +191,13 @@ explained in detail below:
 \code{utils::stack} & yes & no & no & no & no & no\\
 \bottomrule
     \end{tabular}
-    \caption{\label{tab:features} 
+    \caption{\label{tab:features}
       Reshaping functions in R support various features:
-      ``single'' for converting input columns into a single output column; 
-      ``multiple'' for converting input columns 
-      (either ``sorted'' in a regular order, or ``unsorted'' for any order) 
+      ``single'' for converting input columns into a single output column;
+      ``multiple'' for converting input columns
+      (either ``sorted'' in a regular order, or ``unsorted'' for any order)
       into multiple output columns of different types;
-      ``regex'' for regular expressions to 
+      ``regex'' for regular expressions to
       ``match'' input column names or to
       ``capture'' and create new output column names;
       ``na.rm'' for removal of missing values;
@@ -271,10 +271,97 @@ input columns. Both functions support list column output, but other
 features from Table~\ref{tab:features} are not supported (regular
 expressions, missing value removal, type conversion).
 
-<<load>>=
-nc::capture_melt_single
+\section{New features in \pkg{nc}}
 
-@ 
+The \pkg{nc} package provides new regular expression functionality
+based on the syntax recently proposed by
+\citet{HOCKING2019-namedCapture}. In this section we first discuss how
+the \pkg{nc} package implements this syntax as a front-end to three
+regex engines, and we then discuss the new features for data reshaping
+using regular expressions.
+
+\subsection{Uniform interface to three regex engines}
+
+Several C libraries providing regular expression engines are provided
+in R. The standard R distribution has included and the Perl-Compatible
+Regular Expressions (PCRE) C library since 2002 \citep{R.NEWS.1.txt}.
+CRAN package \pkg{re2r} provides the RE2 library, and \pkg{stringi}
+provides the ICU library. Each of these regex engines has a unique
+feature set, and may be preferred for different applications. For
+example, PCRE is installed by default, RE2 guarantees matching in
+polynomial time, and ICU provides strong unicode support. For a more
+detailed comparison of the relative strengths of each regex library,
+we refer the reader to the recent paper of
+\citep{HOCKING2019-namedCapture}.
+
+Each regex engine has also a different R interface, so switching from
+one engine to another may require non-trivial modifications of user
+code. In order to make switching between engines easier,
+\citet{HOCKING2019-namedCapture} introduced the \pkg{namedCapture}
+package, which provides a uniform interface for capturing text using
+PCRE and RE2. The user may specify the desired engine via
+e.g. \code{options(namedCapture.engine="PCRE")}; the
+\pkg{namedCapture} package provides the output in a uniform
+format. However \pkg{namedCapture} requires the engine to support
+specifying capture group names in regex pattern strings, and to
+support output of the group names to R (which ICU does not support).
+
+Our proposed \pkg{nc} package provides support for the ICU engine in
+addition to PCRE and RE2. The \pkg{nc} package implements this
+functionality using un-named capture groups, which are supported in
+all three regex engines. In particular, a regular expression is
+constructed in R code that uses named arguments to indicate captures,
+which are translated to un-named groups when passed to the regex
+engine. For example, consider a user who wants to capture the two
+parts of the column names of the iris data,
+e.g. \code{Sepal.Length}. The user would typically specify the
+capturing regular expression as a string literal,
+e.g. \code{"(.*)[.](.*)"}. Using \pkg{nc} the same pattern can be
+applied to the iris data column names via
+
+<<capture-iris-cols>>=
+nc::capture_first_vec(
+  names(iris),
+  part=".*",
+  "[.]",
+  dim=".*",
+  engine="RE2",
+  nomatch.error=FALSE)
+
+@
+
+The first argument specifies the subject and the following three
+arguments define the pattern. Each named R argument in the pattern
+generates an un-named capture group by enclosing the specified value
+in parentheses, e.g. \code{(.*)}. All of the sub-patterns are pasted
+together in the sequence they appear in order to create the final
+pattern that is used with the specified regex engine. The
+\code{nomatch.error=FALSE} argument is given because the default is to
+stop with an error if any subjects do not match the specified
+pattern. In order to see the pattern that is generated and passed to
+the specified regex engine, we can use
+
+<<see>>=
+nc::var_args_list(
+  part=".*",
+  "[.]",
+  dim=".*")$pattern
+
+@
+
+TODO
+
+\subsection{Wide-to-tall data reshaping}
+
+TODO
+
+\section{Comparison with other packages}
+
+TODO
+
+\section{Discussion and conclusions}
+
+TODO
 
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from

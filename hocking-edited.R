@@ -1,4 +1,4 @@
-### R code from vignette source '/home/tdhock/projects/nc-article/hocking-edited.Rnw'
+### R code from vignette source '/Users/maudelaperriere/toby/projects/nc-article/hocking-edited.Rnw'
 
 ###################################################
 ### code chunk number 1: load
