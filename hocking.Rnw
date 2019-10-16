@@ -282,7 +282,7 @@ using regular expressions.
 
 \subsection{Uniform interface to three regex engines}
 
-Several C libraries providing regular expression engines are provided
+Several C libraries providing regular expression engines are available 
 in R. The standard R distribution has included and the Perl-Compatible
 Regular Expressions (PCRE) C library since 2002 \citep{R.NEWS.1.txt}.
 CRAN package \pkg{re2r} provides the RE2 library, and \pkg{stringi}
@@ -321,12 +321,7 @@ applied to the iris data column names via
 
 <<capture-iris-cols>>=
 nc::capture_first_vec(
-  names(iris),
-  part=".*",
-  "[.]",
-  dim=".*",
-  engine="RE2",
-  nomatch.error=FALSE)
+  names(iris), part=".*", "[.]", dim=".*", engine="RE2", nomatch.error=FALSE)
 
 @
 
@@ -342,10 +337,7 @@ pattern. In order to see the pattern that is generated and passed to
 the specified regex engine, we can use
 
 <<see>>=
-nc::var_args_list(
-  part=".*",
-  "[.]",
-  dim=".*")$pattern
+nc::var_args_list(part=".*", "[.]", dim=".*")$pattern
 
 @
 
