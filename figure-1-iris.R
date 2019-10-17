@@ -1,5 +1,5 @@
 library(data.table)
-(some.iris <- data.table(iris, flower=1:nrow(iris))[, .SD[1], by=Species][1:2])
+(some.iris <- data.table(iris, flower=1:nrow(iris))[c(1, 51)])
 nc::capture_melt_single(
   some.iris,
   part=".*",

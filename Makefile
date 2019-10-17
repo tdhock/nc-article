@@ -1,7 +1,7 @@
 submission.zip: RJwrapper.pdf
 	cp hocking.bib hocking-edited.R hocking-edited.tex Makefile RJwrapper.pdf RJwrapper.tex submission
 	zip submission submission/* 
-RJwrapper.pdf: hocking-edited.tex hocking.bib 
+RJwrapper.pdf: hocking-edited.tex hocking.bib figure-1-iris.pdf
 	R -e 'tools::texi2pdf("RJwrapper.tex")'
 hocking-edited.Rnw: hocking-remove-space.R hocking.Rnw 
 	R --vanilla < $<

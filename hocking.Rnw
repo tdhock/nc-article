@@ -70,37 +70,49 @@ simplify the code required to specify wide-to-tall data reshaping
 operations. For one such operation the input is a ``wide'' table with
 many columns, and the desired output is a ``tall'' table with more
 rows, and some of the input columns converted into a smaller number of
-output columns (Figure~\ref{fig:wide-to-tall}). We refer to the
-columns involved in this conversion as ``data input columns'' and
-``data output columns''; the output may include additional columns
-with values captured from the input column names. For example the wide
-iris data (W in Figure~\ref{fig:wide-to-tall}) have four data input
-columns: \code{Sepal.Length}, \code{Sepal.Width}, \code{Petal.Length},
-\code{Petal.Width}. For some purposes (e.g. displaying a histogram of
-each data input column using facets in \CRANpkg{ggplot2}) the desired
-reshaping operation results in a table with a single data output
-column (S in Figure~\ref{fig:wide-to-tall}) and two columns captured
-from input names. For other purposes (e.g. scatterplot to compare
-Petal and Sepal sizes) the desired reshaping operation results in a
-table with multiple data output columns (M1 in
-Figure~\ref{fig:wide-to-tall}). We propose to use the new regular
-expression syntax of \citet{HOCKING2019-namedCapture},
-e.g. \code{part=".*",} \code{"[.]",} \code{dimension=".*"}, to define
-both types of wide-to-tall data reshaping operations. In particular,
-we propose using a single capturing regular expression for both (1)
-defining the subset of data input columns to convert, and (2)
-capturing additional output columns from the input column names. This
-We will show that this results in a simple, powerful, non-repetitive
-syntax for wide-to-tall data reshaping.
+output columns (Figure~\ref{fig:wide-to-tall}). To clarify the
+discussion we first define three terms that we will use to refer to
+the different types of columns involved in this conversion:
+\begin{description}
+\item[Reshape] columns contain the data which is present in the same
+  amount but in different shapes in the input and output. 
+\item[Copy] columns contain data in the input which are each copied to
+  multiple rows in the output.
+\item[Capture] columns are only present in the output, and contain
+  substrings of the reshaped input column names which are captured
+  using a regular expression pattern.
+\end{description}
+For example the wide iris data (W in Figure~\ref{fig:wide-to-tall})
+have four numeric columns to reshape: \code{Sepal.Length},
+\code{Sepal.Width}, \code{Petal.Length}, \code{Petal.Width}. For some
+purposes (e.g. displaying a histogram of each reshape input column
+using facets in \CRANpkg{ggplot2}) the desired reshaping operation
+results in a table with a single reshape output column (S in
+Figure~\ref{fig:wide-to-tall}), two copied columns, and two columns
+captured from the names of the reshaped input columns. For other
+purposes (e.g. scatterplot to compare Petal and Sepal sizes) the
+desired reshaping operation results in a table with multiple reshape
+output columns (M1 with \code{Sepal} and \code{Petal} columns in
+Figure~\ref{fig:wide-to-tall}), two copied columns, and one column
+captured from the names of the reshaped input columns. We propose to
+use the new regular expression syntax of
+\citet{HOCKING2019-namedCapture}, e.g. \code{part=".*",} \code{"[.]",}
+\code{dimension=".*"}, to define both types of wide-to-tall data
+reshaping operations. In particular, we propose using a single
+capturing regular expression for defining both (1) the subset of
+reshape input columns to convert, and (2) the additional capture
+output columns. We will show that this results in a simple, powerful,
+non-repetitive syntax for wide-to-tall data reshaping.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figure-1-iris}
-  \caption{Wide data input columns (W, black) can be reshaped to a
-    single data output column (S, blue) or multiple data output
-    columns (M1, M2, red). Rectangle background indicates column type
-    (white for data, grey for columns with values that come from text
-    captured from input column names). }
+  \includegraphics[width=0.9\textwidth]{figure-1-iris}
+  \caption{The iris data set (W, black) is considered as the input to
+    a wide-to-tall reshape operation. It has four columns to reshape,
+    which are converted to either a single reshape column (S, blue) or
+    multiple (2) reshape columns (M1, M2, red). Other output columns
+    are either copied from the non-reshaped input data, or captured
+    from the names of the reshaped input columns.}
   \label{fig:wide-to-tall}
 \end{figure}
 
@@ -332,9 +344,10 @@ in parentheses, e.g. \code{(.*)}. All of the sub-patterns are pasted
 together in the sequence they appear in order to create the final
 pattern that is used with the specified regex engine. The
 \code{nomatch.error=FALSE} argument is given because the default is to
-stop with an error if any subjects do not match the specified
-pattern. In order to see the pattern that is generated and passed to
-the specified regex engine, we can use
+stop with an error if any subjects do not match the specified pattern
+(the fifth subject \code{Species} does not match). In order to see the
+pattern that is generated and passed to the specified regex engine, we
+can use
 
 <<see>>=
 nc::var_args_list(part=".*", "[.]", dim=".*")$pattern
