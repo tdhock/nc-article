@@ -75,12 +75,12 @@ discussion we first define three terms that we will use to refer to
 the different types of columns involved in this conversion:
 \begin{description}
 \item[Reshape] columns contain the data which is present in the same
-  amount but in different shapes in the input and output. These are
-  referred to as \code{measure.vars} in the \code{melt} function in
-  \pkg{data.table} and \pkg{reshape2}.
+  amount but in different shapes in the input and output. There are
+  equivalent terms used in different R packages: \code{varying} in
+  \code{utils::reshape}, \code{measure.vars} in \code{melt}
+  (\pkg{data.table}, \pkg{reshape2}), etc.
 \item[Copy] columns contain data in the input which are each copied to
-  multiple rows in the output. These are referred to as
-  \code{id.vars} in the \code{melt} function.
+  multiple rows in the output (\code{id.vars} in \code{melt}).
 \item[Capture] columns are only present in the output, and contain
   data which come from matching a
   capturing regex pattern to the input reshape column names.
