@@ -75,12 +75,15 @@ discussion we first define three terms that we will use to refer to
 the different types of columns involved in this conversion:
 \begin{description}
 \item[Reshape] columns contain the data which is present in the same
-  amount but in different shapes in the input and output. 
+  amount but in different shapes in the input and output. These are
+  referred to as \code{measure.vars} in the \code{melt} function in
+  \pkg{data.table} and \pkg{reshape2}.
 \item[Copy] columns contain data in the input which are each copied to
-  multiple rows in the output.
+  multiple rows in the output. These are referred to as
+  \code{id.vars} in the \code{melt} function.
 \item[Capture] columns are only present in the output, and contain
-  substrings of the reshaped input column names which are captured
-  using a regular expression pattern.
+  data which come from matching a
+  capturing regex pattern to the input reshape column names.
 \end{description}
 For example the wide iris data (W in Figure~\ref{fig:wide-to-tall})
 have four numeric columns to reshape: \code{Sepal.Length},
@@ -107,12 +110,12 @@ non-repetitive syntax for wide-to-tall data reshaping.
 \begin{figure}
   \centering
   \includegraphics[width=0.9\textwidth]{figure-1-iris}
-  \caption{The iris data set (W, black) is considered as the input to
-    a wide-to-tall reshape operation. It has four columns to reshape,
-    which are converted to either a single reshape column (S, blue) or
-    multiple (2) reshape columns (M1, M2, red). Other output columns
-    are either copied from the non-reshaped input data, or captured
-    from the names of the reshaped input columns.}
+  \caption{Two rows of the iris data set (W, black) are considered as
+    the input to a wide-to-tall reshape operation. Four input reshape
+    columns are converted to either a single output reshape column (S,
+    blue) or multiple (2) output reshape columns (M1, M2, red). Other
+    output columns are either copied from the non-reshaped input data,
+    or captured from the names of the reshaped input columns.}
   \label{fig:wide-to-tall}
 \end{figure}
 
@@ -161,21 +164,21 @@ provide similar functionality. Each function supports a different set
 of features (Table~\ref{tab:features}); each feature/column is
 explained in detail below:
 \begin{description}
-\item[single] refers to support for converting input columns
-  of the same type to a single output column.
-\item[multiple] refers to support for converting input columns of
-  possibly different types to multiple output columns; ``sorted''
-  means that conversion works correctly only if the columns are sorted
+\item[single] refers to support for converting input reshape columns
+  of the same type to a single reshape output column.
+\item[multiple] refers to support for converting input reshape columns of
+  possibly different types to multiple output reshape columns; ``sorted''
+  means that conversion works correctly only if the input reshape columns are sorted
   in a regular order, e.g. \code{Sepal.Length}, \code{Sepal.Width},
   \code{Petal.Length}, \code{Petal.Width}; ``unsorted'' means that
-  conversion works correctly even if the columns are not sorted,
+  conversion works correctly even if the they are not sorted,
   e.g. \code{Sepal.Length}, \code{Sepal.Width}, \code{Petal.Width},
   \code{Petal.Length}.
 \item[regex] refers to support for regular expressions; ``match''
   means a pattern is used to match the input column names; ``capture''
-  means that the capture groups in the specified pattern are used to
-  create new output columns, which is especially useful when the names
-  consist of several distinct variables, e.g. \code{Sepal.Length};
+  means that the specified pattern is used to
+  create new output capture columns --- this is especially useful when the names
+  consist of several distinct pieces of information, e.g. \code{Sepal.Length};
   ``no'' means that regular expressions are not directly supported
   (although \code{base::grep} can always be used).
 \item[na.rm] refers to support for removing missing values.
