@@ -224,34 +224,35 @@ explained in detail below:
 Recommended R package functions include \code{stats::reshape} and
 \code{utils::stack} for reshaping data from wide to tall. Of the
 features listed in Table~\ref{tab:features}, \code{utils::stack} only
-supports single column output, whereas \code{stats::reshape} supports
+supports output with a single reshape column, whereas \code{stats::reshape} supports
 the following features. For data with regular input column names (output
 column, separator, time value), regular expressions can be used to
 specify the separator (e.g. in \code{Sepal.Length}, \code{Sepal} is
 output column, dot is separator, \code{Length} is time
 value). Multiple output columns are supported, but incorrect output
 may be computed if input columns are not sorted in a regular
-order. The time value is captured by default to an output column named
-\code{time}. Automatic type conversion is performed on time values
+order. The time value is output to a capture column named
+\code{time} by default. Automatic type conversion is performed on time values
 when possible, but custom type conversion functions are not
 supported. There is neither support for missing value removal nor list
 column output.
 
 The \pkg{tidyr} package provides two functions for reshaping data from
 wide to tall format: \code{gather} and \code{pivot\_longer}. The older
-\code{gather} function only supports converting input columns to a
-single output column (not multiple). The input columns to convert may
+\code{gather} function only supports converting input reshape columns to a
+single output reshape column (not multiple). 
+The input reshape columns to convert may
 not be directly specified using regular expressions; instead R
 expressions such as \code{x:y} can be used to indicate all columns
 starting from \code{x} and ending with \code{y}. It does support
 limited type conversion; if the \code{convert=TRUE} argument is
 specified, the \code{utils::type.convert} function is used to convert
 the input column names to numeric, integer, or logical. In contrast
-the newer \code{pivot\_longer} also supports multiple output columns
-(even if input columns are unsorted), and regular expressions for
-capturing new output columns from the input column names (but
-\code{grep} must be used to specify the input columns to
-convert). Limited type conversion is also supported in
+the newer \code{pivot\_longer} also supports multiple output reshape columns
+(even if input reshape columns are unsorted), and regular expressions for
+specifying output capture columns
+(but to specify input reshape columns with a regex,
+\code{grep} must be used). Limited type conversion is also supported in
 \code{pivot\_longer}, via the \code{names\_ptypes} argument, which
 should be a list with names corresponding to output columns and values
 corresponding to prototypes (zero-length atomic vectors,
@@ -263,8 +264,8 @@ removing missing values, although different arguments are used
 The \CRANpkg{reshape2} and \pkg{data.table} packages each provide a
 \code{melt} function for converting data from wide to tall
 \citep{Wickham2007, Dowle2019}. The older \pkg{reshape2} version only
-supports converting input columns to a single output column, whereas
-the newer \pkg{data.table} version also supports multiple output
+supports converting input reshape columns to a single output reshape column, whereas
+the newer \pkg{data.table} version also supports multiple output reshape
 columns. Regular expressions are not supported in \pkg{reshape2}, but
 can be used with \code{data.table::patterns} to match input column
 names to convert (although the output can be incorrect if columns are
@@ -277,11 +278,11 @@ The \CRANpkg{cdata} package provides several functions for data
 reshaping, including \code{rowrecs\_to\_blocks} and
 \code{unpivot\_to\_blocks} which can convert data from wide to tall
 \citep{Mount2019}. The simpler of the two functions is
-\code{unpivot\_to\_blocks}, which supports a single output column
+\code{unpivot\_to\_blocks}, which supports a single output reshape column
 (interface similar to \code{reshape2::melt}/\code{tidyr::gather}). The
 user of \code{rowrecs\_to\_blocks} must provide a control table that
 describes how the input should be reshaped into the output. It
-therefore supports multiple output columns, for possibly unsorted
+therefore supports multiple output reshape columns, for possibly unsorted
 input columns. Both functions support list column output, but other
 features from Table~\ref{tab:features} are not supported (regular
 expressions, missing value removal, type conversion).
