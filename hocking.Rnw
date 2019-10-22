@@ -240,7 +240,7 @@ column output.
 The \pkg{tidyr} package provides two functions for reshaping data from
 wide to tall format: \code{gather} and \code{pivot\_longer}. The older
 \code{gather} function only supports converting input reshape columns to a
-single output reshape column (not multiple). 
+single output reshape column (not multiple).
 The input reshape columns to convert may
 not be directly specified using regular expressions; instead R
 expressions such as \code{x:y} can be used to indicate all columns
@@ -298,7 +298,7 @@ using regular expressions.
 
 \subsection{Uniform interface to three regex engines}
 
-Several C libraries providing regular expression engines are available 
+Several C libraries providing regular expression engines are available
 in R. The standard R distribution has included and the Perl-Compatible
 Regular Expressions (PCRE) C library since 2002 \citep{R.NEWS.1.txt}.
 CRAN package \pkg{re2r} provides the RE2 library, and \pkg{stringi}
@@ -329,40 +329,297 @@ all three regex engines. In particular, a regular expression is
 constructed in R code that uses named arguments to indicate captures,
 which are translated to un-named groups when passed to the regex
 engine. For example, consider a user who wants to capture the two
-parts of the column names of the iris data,
+pieces of the column names of the iris data,
 e.g. \code{Sepal.Length}. The user would typically specify the
 capturing regular expression as a string literal,
-e.g. \code{"(.*)[.](.*)"}. Using \pkg{nc} the same pattern can be
+e.g. \code{"(.*)[.](.*)"}.
+Using \pkg{nc} the same pattern can be
 applied to the iris data column names via
 
 <<capture-iris-cols>>=
 nc::capture_first_vec(
-  names(iris), part=".*", "[.]", dim=".*", engine="RE2", nomatch.error=FALSE)
+  names(iris), part=".*", "[.]", dim=".*", engine="ICU", nomatch.error=FALSE)
 
 @
 
-The first argument specifies the subject and the following three
-arguments define the pattern. Each named R argument in the pattern
-generates an un-named capture group by enclosing the specified value
-in parentheses, e.g. \code{(.*)}. All of the sub-patterns are pasted
-together in the sequence they appear in order to create the final
-pattern that is used with the specified regex engine. The
+Above we see an example usage of \code{nc:capture\_first\_vec}, which
+is for capturing the first match of a regex from a character vector
+subject (the first argument). There are a variable number of other
+arguments (\code{...}) which are used to define
+the regex pattern. In this case there are three pattern arguments:
+\code{part=".*", "[.]", dim=".*"}. Each named R argument in the
+pattern generates an un-named capture group by enclosing the specified
+value in parentheses, e.g. \code{(.*)}. All of the sub-patterns are
+pasted together in the sequence they appear in order to create the
+final pattern that is used with the specified regex engine. The
 \code{nomatch.error=FALSE} argument is given because the default is to
 stop with an error if any subjects do not match the specified pattern
-(the fifth subject \code{Species} does not match). In order to see the
-pattern that is generated and passed to the specified regex engine, we
-can use
+(the fifth subject \code{Species} does not match). Under the hood, the
+following function is called to parse the pattern arguments:
 
 <<see>>=
-nc::var_args_list(part=".*", "[.]", dim=".*")$pattern
+str(compiled <- nc::var_args_list(part=".*", "[.]", dim=".*"))
 
 @
 
-TODO
+This function is intended mostly for internal use, but can be useful
+for viewing the generated regex pattern (or using it as input to
+another regex function). The return value is a named list of two
+elements: \code{pattern} is the capturing regular expression which is
+generated based on the input arguments, and \code{fun.list} is a named
+list of type conversion functions. Group-specific type conversion functions
+are useful for converting captured text into numeric output columns
+\citet{HOCKING2019-namedCapture}. Note that the order of elements in
+\code{fun.list} corresponds to the order of capture groups in the
+pattern (e.g. first capture group named \code{part}, second
+\code{dim}). These data can be used with any regex engine that
+supports un-named capture groups (including ICU) in order to get a
+capture matrix with column names, e.g.
+
+<<icu>>=
+m <- stringi::stri_match_first_regex(names(iris), compiled$pattern)
+colnames(m) <- c("match", names(compiled$fun.list))
+m
+
+@
+
+Again, this is not the recommended usage of \pkg{nc}, but here we give
+these details in order to explain how it works. Note that the result
+from \pkg{stringi} is a character matrix with three columns: first for
+the entire match, and another column for each capture group. Using the
+same pattern with \code{base::regexpr} (PCRE engine) or
+\code{re2r::re2_match} (RE2 engine) would give slightly different
+results (e.g. output when there is no match).
+The \pkg{nc} package takes care of converting these different
+results into a standard format which makes it easy to switch regex
+engines (by changing the value of the \code{engine} argument).
+
+Note that the standard format used by \pkg{nc}, as shown in the result
+above from \code{nc::capture\_first\_vec}, is a data table. The main
+reason that data tables are always output by \pkg{nc} matching functions is in
+order to support numeric output columns. A secondary reason is for
+the convenient syntax, as we will show in the next section.
+
+\subsection{Data table integration and
+  \code{nc::field} to avoid repetition}
+
+In the previous section we mentioned that every \pkg{nc} matching
+function outputs a data table, which can be
+queried/summarized/joined/etc using a convenient syntax. In this
+section we show an example of how this syntax makes is easy to parse
+non-tabular text output files from a bioinformatics program.  We also
+show an example of how the new \code{nc::field} function can be used
+to avoid repetition when defining a pattern to match fields of the
+form \code{variable=value}.
+
+We consider a bioinformatics program called SweeD which outputs two
+data files that are linked by an integer alignment ID number
+\citep{SweeD}. The ``Report'' file is similar to tab-separated values
+(TSV), except that there are some blank lines, followed by two forward
+slashes, followed by the integer alignment number. For example, the
+first few lines of the first two alignments look like:
+
+<<sweedReport>>=
+report.txt.gz <- system.file("extdata", "SweeD_Report.txt.gz", package="nc")
+report.vec <- readLines(report.txt.gz)
+cat(report.vec[1:5], sep="\n")
+cat(report.vec[1003:1008], sep="\n")
+
+@
+
+The file above can be easily parsed by \code{nc::capture\_all\_str},
+which is for finding all matches of a regular expression in a
+multi-line text file:
+
+<<parseReport>>=
+report.alignments <- nc::capture_all_str(
+  report.vec,
+  "//",
+  Alignment="[0-9]+",
+  TSV="[^/]+")
+class(report.alignments)
+dim(report.alignments)
+nchar(report.alignments$TSV)
+substr(as.matrix(report.alignments[1:2]), 1, 50)
+
+@
+
+The code above computes a data table with ten rows, one for each match
+in the text file. There are two columns: \code{Alignment} is a unique
+identifier, and \code{TSV} contains the tab-separated values in each
+block. Each \code{TSV} entry is a long text string (about 40,000
+characters); we display the first 50 characters of the first two
+blocks above. Because the result is a data table, we can parse the
+\code{TSV} using a call to \code{fread} inside of a \code{by} block:
+
+<<freadby>>=
+(report.positions <- report.alignments[, data.table::fread(text=TSV), by=Alignment])
+@
+
+A bioinformatics analyst may desire to plot the \code{Likelihood} or
+\code{Alpha} values in a genome browser, as a function of
+\code{Position} along the chromosome. Each alignment has a chromosome
+name which therefore needs to be added/joined to this table; the
+second ``Info'' file has the chromosome name, as well as some other
+summary statistics for each alignment:
+
+<<info>>=
+info.txt.gz <- system.file("extdata", "SweeD_Info.txt.gz", package="nc")
+info.vec <- readLines(info.txt.gz)
+info.vec[24:40]
+@
+
+Again, the data above can be parsed to a data table via a regular
+expression:
+
+<<infoparsed>>=
+nc::capture_all_str(
+  info.vec,
+  " ",
+  "Alignment", " ", Alignment="[0-9]+",
+  "\n\n\t\t",
+  "Chromosome", ":\t\t", Chromosome=".*")
+@
+
+The result above is a data table with ten rows, one for each
+alignment. There are two columns: the first is the \code{Alignment}
+identifier, and the second is the \code{Chromosome} name. Note the
+repetition in the code above: \code{Alignment}/\code{Chromosome}
+appear as capture group names as well as in the pattern
+itself. Such repetition can be avoided by using the \code{nc::field} helper
+function, which uses its first argument for the capture group name as
+well as a pattern to match:
+
+<<infoparsedfield>>=
+(info.alignments <- nc::capture_all_str(
+  info.vec,
+  " ",
+  nc::field("Alignment", " ", "[0-9]+"),
+  "\n\n\t\t",
+  nc::field("Chromosome", ":\t\t", ".*")))
+
+@
+
+Note that the repetition in the code has been removed, and the result
+is the same (because the generated regex pattern is the same). Also
+note that the order of the regex string literals is unchanged, so the
+pattern is as easy to read/understand as the original repetitive
+version. Internally, \code{nc::field} generates a pattern that
+consists of pasting all of its arguments together; the first argument
+is also used as the capture group name for the third (and subsequent)
+arguments. In general, \code{nc::field} is useful whenever there are
+several fields to parse, each of the form \code{variable=value}.
+
+In order to create the desired output table with \code{Chromosome} and
+\code{Position} columns, we join the two data tables:
+
+<<join>>=
+info.alignments[report.positions, on="Alignment"]
+@
+
+To conclude this section, we have shown that
+\code{nc::capture\_all\_str} inputs a multi-line text file subject,
+then outputs a data table with one row per match and one column per
+capture group. We have also shown how these data tables may be further
+processed (e.g. \code{fread}, \code{by=Alignment}) and joined using
+the convenient data table syntax. Finally, we showed two examples of
+using \code{nc::field} to define a pattern that matches/captures
+fields of the form \code{variable=value}.
 
 \subsection{Wide-to-tall data reshaping}
 
-TODO
+In this section we show how new \pkg{nc} functions can be used to
+reshape wide data (with many columns) to tall data (with fewer
+columns, and more rows). We begin by considering the two data
+visualization problems mentioned in the introduction, involving the
+familiar iris data set. First, suppose we would like to examine the
+largest/smallest values or ranges. One way would be to use a histogram
+of each numeric variable, with row facets for flower part and column
+facets for measurement dimension. Our desired output therefore needs a
+single column with all of the reshaped numeric data to plot
+(Figure~\ref{fig:wide-to-tall}, W$\rightarrow$S). We can perform this
+operation using \code{nc::capture\_melt\_single}, which inputs a data
+frame and a pattern describing the columns to melt:
+
+<<irisSingle>>=
+(iris.tall.single <- nc::capture_melt_single(
+  iris, part=".*", "[.]", dim=".*", value.name="cm"))
+@
+
+The output above consists of one copy column (\code{Species}), two
+capture columns (\code{part}, \code{dim}), and a single reshape column
+(\code{cm}). The \code{value.name} argument is not considered part of
+the pattern, and instead specifies the name of the output reshape
+column. The desired histogram may be easily plotted using these data:
+
+<<hist>>=
+library(ggplot2)
+ggplot(iris.tall.single)+facet_grid(part~dim)+
+  theme_bw()+theme(panel.spacing=grid::unit(0, "lines"))+
+  geom_histogram(aes(cm, fill=Species), color="black", bins=40)
+@
+
+For the second data reshaping task, suppose we want to determine
+whether or not sepals are larger than petals, for each measurement
+dimension and species. We could use a scatterplot of sepal versus
+petal, with a facet for measurement dimension. We therefore need a
+data table with two reshape output columns: a \code{Sepal} column to
+plot against a \code{Petal} column (Figure~\ref{fig:wide-to-tall},
+W$\rightarrow$M1). We can perform this operation using
+\code{nc::capture\_melt\_multiple}, which inputs a data frame and a
+special pattern which must contain the \code{column} group and one
+other named group:
+
+<<irisMultiple>>=
+(iris.parts <- nc::capture_melt_multiple(
+  iris, column=".*", "[.]", dim=".*"))
+@
+
+The output above consists of one copy column (\code{Species}), one
+capture columns (\code{dim}), and two reshape columns (\code{Petal},
+\code{Sepal}). The desired scatterplot may be easily plotted using
+these data:
+
+<<hist>>=
+ggplot(iris.parts)+facet_grid(.~dim)+
+  theme_bw()+theme(panel.spacing=grid::unit(0, "lines"), legend.position="bottom")+
+  coord_equal()+geom_abline(slope=1, intercept=0, color="grey")+
+  geom_point(aes(Petal, Sepal, color=Species), shape=1)
+@
+
+It is clear from the plot that sepals are larger than petals, for
+both dimensions, and for every measured flower.
+
+As a final example we consider a data set from the World Health Organization:
+
+<<who>>=
+data(who, package="tidyr")
+names(who)
+tail(who[, c("country", "year", "new_sp_m014", "new_sn_f5564", "newrel_f65")])
+
+@
+
+Each reshape column name has three distinct pieces of information:
+diagnosis type, gender, and age group.
+As with the iris data, there are a number of interesting questions
+that can be answered by first reshaping the data (e.g. which age
+groups and diagnosis types are the most frequent).
+
+<<whoreshape>>=
+new.diag.gender <- list(
+  "new_?",
+  diagnosis=".*",
+  "_",
+  gender=".")
+nc::capture_melt_single(who, new.diag.gender, ages=".*")
+years.pattern <- list(new.diag.gender, ages=list(
+  min.years="0|[0-9]{2}", as.numeric,
+  max.years="[0-9]{0,2}", function(x)ifelse(x=="", Inf, as.numeric(x))))
+(who.typed <- nc::capture_melt_single(
+  who, years.pattern,
+  value.name="count"))
+str(who.typed)
+@
 
 \section{Comparison with other packages}
 
