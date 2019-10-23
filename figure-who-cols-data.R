@@ -75,5 +75,4 @@ for(N.rep in N.rep.vec){
 }
 
 timing.dt <- do.call(rbind, timing.dt.list)
-
 saveRDS(timing.dt, "figure-who-cols-data.rds")

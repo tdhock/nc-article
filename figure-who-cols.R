@@ -4,20 +4,21 @@ who.timings <- readRDS("figure-who-cols-data.rds")
 
 who.timings[, seconds := time/1e9]
 stats.timings <- who.timings[, .(
-  mean=mean(seconds),
-  sd=sd(seconds)
-), by=.(N.rows, expr)]
+  median=median(seconds),
+  q25=quantile(seconds, 0.25),
+  q75=quantile(seconds, 0.75)
+), by=.(N.col, expr)]
 
 gg <- ggplot()+
   theme_bw()+
   geom_ribbon(aes(
-    N.rows, ymin=mean-sd, ymax=mean+sd, fill=expr),
-    alpha=0.5,
+    N.col, ymin=q25, ymax=q75, fill=expr),
+    alpha=0.2,
     data=stats.timings)+
   geom_line(aes(
-    N.rows, mean, color=expr),
+    N.col, median, color=expr),
     data=stats.timings)+
-  scale_x_log10(limits=c(NA, max(stats.timings$N.rows)*10))+
+  scale_x_log10(limits=c(NA, max(stats.timings$N.col)*10))+
   scale_y_log10("Computation time (seconds)")
 dl <- directlabels::direct.label(gg, "last.polygons")
 

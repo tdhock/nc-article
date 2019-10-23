@@ -15,3 +15,13 @@ Abstract: Regular expressions are powerful tools for extracting tables
 - Output [[file:RJwrapper.pdf]]  
 - Main input/source file to edit is [[file:hocking.Rnw]] 
 - [[file:Makefile]] takes care of creating [[file:submission.zip]]
+
+** 23 Oct 2019
+
+[[file:figure-who-rows.R]] makes
+
+[[file:figure-who-rows.png]]
+
+[[file:figure-who-cols.R]] makes
+
+[[file:figure-who-cols.png]]
