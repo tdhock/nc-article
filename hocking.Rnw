@@ -62,7 +62,7 @@ pattern in the previous paragraph can be written as \code{part=".*",}
 \code{"[.]",} \code{dimension=".*"}.
 Sub-patterns can be grouped for
 clarity and/or re-used using
-lists, and numeric data may be extracted by specifying group-specific
+lists, and numeric data may be extracted with user-provided
 type conversion functions.
 
 A main thesis of this article is that regular expressions can greatly
@@ -566,10 +566,10 @@ dimension and species. We could use a scatterplot of sepal versus
 petal, with a facet for measurement dimension. We therefore need a
 data table with two reshape output columns: a \code{Sepal} column to
 plot against a \code{Petal} column (Figure~\ref{fig:wide-to-tall},
-W$\rightarrow$M1). We can perform this operation using
-\code{nc::capture\_melt\_multiple}, which inputs a data frame and a
-special pattern which must contain the \code{column} group and one
-other named group:
+W$\rightarrow$M1). We can perform this operation using another
+function, \code{nc::capture\_melt\_multiple}, which inputs a data
+frame and a pattern which must contain the \code{column} group
+and one other named group:
 
 <<irisMultiple>>=
 (iris.parts <- nc::capture_melt_multiple(
@@ -577,9 +577,9 @@ other named group:
 @
 
 The output above consists of one copy column (\code{Species}), one
-capture columns (\code{dim}), and two reshape columns (\code{Petal},
+capture column (\code{dim}), and two reshape columns (\code{Petal},
 \code{Sepal}). Note that each unique value captured in the special
-\code{column} capture group becomes an output reshape column
+\code{column} group becomes an output reshape column
 name. These data can be used to create the scatterplot using
 \pkg{ggplot2} via:
 
@@ -593,7 +593,43 @@ ggplot(iris.parts)+facet_grid(.~dim)+
 It is clear from the plot that sepals are larger than petals, for
 both dimensions, and for every measured flower.
 
-As a final example we consider a data set from the World Health Organization:
+To conclude this section, \pkg{nc} provides two new functions for data
+reshaping using regular expressions. Both functions input a data
+frame to reshape, and a pattern to match to the column names. For
+\code{nc::capture\_melt\_single}, all matching input columns are
+reshaped in the output to a single column which is named using the
+\code{value.name} argument. For \code{nc::capture\_melt\_multiple} the
+output is multiple reshape columns with names defined by the values
+captured in the special \code{column} group. Values from other
+groups are stored in capture columns in the output. Both functions
+support output of numeric capture columns via user-specified type
+conversion functions.
+
+\section{Comparison with other data reshaping packages}
+
+In this section we compare the new data reshaping functions in the
+\pkg{nc} package with similar functions in other packages. We aim to
+demonstrate that the new \pkg{nc} syntax is often more powerful and
+less repetitive.
+
+\subsection{Advantages with respect to \pkg{tidyr}: pattern syntax and type conversion}
+
+The \pkg{tidyr} package provides functions which can yield results
+similar to \pkg{nc}. One advantage of \pkg{nc} is that complex
+patterns may be defined in terms of simpler sub-patterns, which can
+include group names and type conversion functions. Integrating these
+three pieces results in a syntax that is easy to read as well; it is
+more difficult to build and read complex patterns using \pkg{tidyr}
+syntax, which requires specifying regex strings, group names, and
+types as separate arguments. Another advantage of \pkg{nc} is that the
+range of possible type conversions for capture output columns is
+essentially unlimited, since the user may provide an arbitrary type
+conversion function for each group. In contrast the \pkg{tidyr} user
+may specify a prototype for each group, which results in a limited
+range of possible conversions. Of course, post-processing may be used,
+but that introduces some repetition (of capture column names) in the
+code. For example, consider a data set from the World Health
+Organization:
 
 <<who>>=
 data(who, package="tidyr")
@@ -604,55 +640,219 @@ set.seed(1);sample(names(who), 10)
 Each reshape column name starts with \code{new} and has three distinct
 pieces of information: diagnosis type (e.g. \code{ep}, \code{rel}),
 gender (\code{m} or \code{f}), and age range (e.g. \code{1524},
-\code{4554}). As with the iris data, there are a number of
-interesting questions that can be answered by first reshaping the data
-(e.g. which age groups and diagnosis types are the most frequent).
+\code{4554}). We extract all three pieces of information below,
+and include a function for converting gender to a factor with levels
+in a specific (non-default) order:
 
 <<whoreshape>>=
-new.diag.gender <- list("new_?", diagnosis=".*", "_", gender=".")
-nc::capture_melt_single(who, new.diag.gender, ages=".*")
+nc.who.sub.pattern <- list(
+  "new_?", diagnosis=".*", "_",
+  gender=".", function(mf)factor(mf, c("m", "f")))
+nc.who.ages <- nc::capture_melt_single(who, nc.who.sub.pattern, ages=".*")
+print(nc.who.ages[1:5], class=TRUE)
 @
 
-Above we define \code{new.diag.list} which we use as the first part of
-the pattern in the call to \code{nc::capture\_melt\_single} above (and
-we will use that sub-pattern again below). The result is a data table
-in which all three capture columns (\code{diagnosis}, \code{gender},
-\code{ages}) are character vectors, since no type conversion functions
-were specified. If we want to extract two numeric columns from
-\code{ages} (e.g. to use as interval-censored outputs in a survival
-regression), we can provide a different pattern with type conversion
-functions:
+First note that \code{new.diag.list} is a sub-pattern variable that we
+have used as the first part of the pattern in the call to
+\code{nc::capture\_melt\_single} above (and we will use that
+sub-pattern again below). Sub-pattern lists may contain regex
+character string literals (patterns to match), functions (for
+converting the previous named group), or other sub-pattern lists. The
+result is a data table with \code{gender} converted to a factor ---
+this can also be accomplished in the \code{tidyr::pivot\_longer}
+function:
+
+<<pivot>>=
+tidyr.who.sub.pattern <- "new_?(.*)_(.)"                   #L1
+tidyr.who.pattern <- paste0(tidyr.who.sub.pattern, "(.*)") #L2
+tidyr::pivot_longer(                                       #L3
+  who, cols=grep(tidyr.who.pattern, names(who)),           #L4
+  names_to=c("diagnosis", "gender", "ages"),               #L5
+  names_ptypes=list(gender=factor(levels=c("m", "f"))),    #L6
+  names_pattern=tidyr.who.pattern)[1:5,]                   #L7
+@
+
+In the code above we first define a sub-pattern variable for the
+\code{diagnosis} and \code{gender} capture groups, as we did using
+\pkg{nc}. One difference is that the \pkg{tidyr} pattern is a string
+literal with un-named capture groups, whereas the \pkg{nc} pattern is
+a list which includes capture group names as well as type conversion
+functions. These three parameters are specified as three separate
+arguments in \pkg{tidyr}, which results in some separation
+(e.g. group names defined on L5 but sub-patterns are defined on L1)
+and repetition (e.g. gender appears on L5 and L6) in the code. The
+pattern also must be repeated: first in the \code{cols} argument (L4) to
+specify the set of input columns to reshape, second in the
+\code{names\_pattern} argument (L7) to specify how the output column values
+should be captured from the input column names.
+
+Now suppose we want to extract two numeric columns from \code{ages},
+for example to use as interval-censored outputs in a survival
+regression. Using \pkg{nc} we can use the previously defined
+sub-pattern (including the previously defined group names and type
+conversion function) as the first part of a larger pattern:
 
 <<who2>>=
 who.typed <- nc::capture_melt_single(
   who, new.diag.gender, ages=list(
-    min.years="0|[0-9]{2}", as.numeric,
-    max.years="[0-9]{0,2}", function(x)ifelse(x=="", Inf, as.numeric(x))),
-  value.name="count")
-str(who.typed)
+    ymin="0|[0-9]{2}", as.numeric,
+    ymax="[0-9]{0,2}", function(x)ifelse(x=="", Inf, as.numeric(x))))
+who.typed[, .(rows=.N), by=.(ages, ymax, ymin)]
 
-@ 
+@
 
-To conclude this section, \pkg{nc} provides two new functions for data
-reshaping using regular expressions (\code{nc::capture\_melt\_single}
-and \code{nc::capture\_melt\_multiple}). Both functions input a data
-frame to reshape, and a pattern to match to the column names. For
-\code{nc::capture\_melt\_single} all matching input columns are
-reshaped in the output to a single column with name defined by the
-\code{value.name} argument. For \code{nc::capture\_melt\_multiple} the
-output is multiple reshape columns with names defined by the values
-captured in the special \code{column} group. Values captured in other
-groups are stored in capture columns in the output. Both functions
-support arbitrary type conversion functions, which may be specified in
-order to output numeric capture columns.
+In the \pkg{nc} code above, an anonymous function is used to convert
+the values captured in the \code{ymax} group to numeric (and it maps
+the empty string to \code{Inf}). Such custom type conversion functions
+are not supported by \pkg{tidyr}, so post-processing must be used:
 
-\section{Comparison with other packages}
 
-TODO
+<<idyr2>>=
+tidyr.who.pattern2 <- paste0(tidyr.who.sub.pattern, "((0|[0-9]{2})([0-9]{0,2}))")
+transform(tidyr::pivot_longer(
+  who, cols=grep(tidyr.who.pattern2, names(who)),
+  names_to=c("diagnosis", "gender", "ages", "ymin", "ymax"),
+  names_ptypes=list(gender=factor(levels=c("m", "f")), ymin=numeric()),
+  names_pattern=tidyr.who.pattern2),
+  ymax=ifelse(ymax=="", Inf, as.numeric(ymax)))[1:7,]
+@
+
+The code above uses \code{transform} as a post-processing step to
+compute a numeric \code{ymax} column, which involves some repetition
+(\code{ymax} appears four times). Note that numeric conversions that
+do not require special logic (e.g. \code{ymin} above) can be specified
+using \code{names\_ptypes} (but using \code{ymax=numeric()} above
+results in a lossy cast error).
+
+To conclude this comparison, we have seen that defining a complex
+pattern is much more readable/understandable using \pkg{nc} syntax,
+because it keeps group-specific names and type conversion functions
+near the corresponding sub-patterns. We have also shown that
+repetition is often necessary with \pkg{tidyr} (e.g. pattern, group
+names), whereas repetition is avoided by using \pkg{nc}.
+
+\subsection{Comparison with \pkg{data.table} and \code{stats::reshape}}
+
+In this section we demonstrate the advantages of using \pkg{nc} over
+\pkg{data.table} (which is used to implement \pkg{nc}
+functionality). A major advantage is that \pkg{data.table} only
+supports regular expressions for defining the set of input columns to
+reshape; it does not support capture output columns. Another advantage
+is that \pkg{nc} always returns a correct output data set with
+multiple reshape columns, even when the input columns are not sorted
+in a regular order. For example, consider the following simple data
+set in which the columns are not in regular order:
+
+<<iris2>>=
+library(data.table)
+(TC <- data.table(
+  treatment.age=c(13, 15),
+  control.gender=c("M", "M"),
+  treatment.gender=c("F", "F"),
+  control.age=c(25, 22)))
+@
+
+It is clear from the table above that the treatment group consists of
+teenage females, whereas the control group consists of males in their
+twenties. Assume we need an output data table with two reshape columns
+(\code{age} and \code{gender}) as well as a capture column
+(\code{group}). The \pkg{nc} syntax we would use is:
+
+<<ncgroups>>=
+nc::capture_melt_multiple(TC, group=".*", "[.]", column=".*")
+@
+
+The correct result is computed above because \pkg{nc} reshapes based
+on the input column names (column order is not relevant). A na\"ive
+user may attempt to perform this reshape using
+\code{data.table::patterns}:
+
+<<patterns>>=
+melt(TC, measure.vars=patterns(age="age", gender="gender"))
+@
+
+First, note that the syntax above requires repetition of \code{age}
+and \code{gender} (in names and in pattern strings). Also it is clear
+that the result is incorrect!  Actually, \code{patterns} is working as
+documented; it ``returns the matching indices'' of the provided
+regex. However, since the input columns are not sorted in regular
+order, \code{melt} returns an incorrect result. To get a correct
+result, we can provide a list of index vectors:
+
+<<oo>>=
+melt(TC, measure.vars=list(age=c(1,4), gender=c(3,2)))
+@
+
+This is what \pkg{nc} does internally; it also converts the
+\code{variable} output column to a more interpretable/useful capture
+column (e.g. \code{group} above).
+
+The \code{stats::reshape} function also suffers from the same
+issue. Another issue with this function is that it assumes the output
+reshape column names are the first part of the input column names:
+
+<<reshape>>=
+stats::reshape(TC, 1:4, direction="long")
+@
+
+The result above incorrectly contains \code{treatment} and
+\code{control} columns rather than the desired \code{age} and
+\code{gender} columns; ages and genders are also mixed in the same
+columns. To fix that we must rename the input column
+names, putting the desired ouput reshape column names first:
+
+<<reshapenames>>=
+TC.renamed <- structure(TC, names=sub("(.*)[.](.*)", "\\2.\\1", names(TC)))
+stats::reshape(TC.renamed, 1:4, direction="long")
+@
+
+However the result above still contains incorrect results in the
+\code{gender} column. The correct result is can be obtained by sorting
+the input column names:
+
+<<reshapesort>>=
+TC.sorted <- data.frame(TC.renamed)[, sort(names(TC.renamed))]
+stats::reshape(TC.sorted, 1:4, direction="long")
+@
+
+After renaming and sorting the input columns, the correct result is
+obtained using \code{stats::reshape}. Another way to obtain a
+correct result is with the \pkg{cdata} package:
+
+<<cdata>>=
+cdata::rowrecs_to_blocks(
+  TC,
+  controlTable=data.frame(
+    group=c("treatment", "control"),
+    age=c("age.treatment", "age.control"),
+    sex=c("sex.treatment", "sex.control"),
+    stringsAsFactors=FALSE))
+@
+
+The \pkg{cdata} package is extremely powerful, and can handle many
+more types of data reshaping operations than \pkg{nc}. However, it
+requires a very explicit definition of the desired conversion in terms
+of a control table, which results in rather verbose code. In contrast,
+the terse regular expression syntax of \pkg{nc} is a more implicit
+approach, which assumes the input columns to reshape have regular
+names.
+
+To conclude this section, we have discussed some advantages of
+\pkg{nc} relative to other R packages. Regular expressions can be used
+in \pkg{nc} to specify capture output columns, which are not output by
+other functions such as \pkg{data.table::melt}. Input columns with
+regular names do not need to be renamed/sorted for \pkg{nc} functions,
+whereas renaming/sorting is necessary using other functions
+(\code{data.table::melt}, \code{stats::reshape}). Verbose control
+table code is always necessary with \pkg{cdata}, whereas a
+simple/terse regular expression sytnax can often be used with \pkg{nc}
+to simplify definition of reshape operations.
 
 \section{Discussion and conclusions}
 
-TODO
+TODO One versus two functions.
+
+TODO arbitrary type conversion.
 
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from
