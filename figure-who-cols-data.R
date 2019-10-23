@@ -67,7 +67,7 @@ for(N.rep in N.rep.vec){
     "cdata::unpivot_to_blocks"={
       result.list$cdata <- cdata::unpivot_to_blocks(
         some.who, "variable", "value",
-        grep(who.pattern.string, names(some.who), value=TRUE))
+        grep(who.pattern.simple, names(some.who), value=TRUE))
     },
     times=10))
   result.row.vec <- sapply(result.list, nrow)
@@ -75,4 +75,5 @@ for(N.rep in N.rep.vec){
 }
 
 timing.dt <- do.call(rbind, timing.dt.list)
+
 saveRDS(timing.dt, "figure-who-cols-data.rds")
