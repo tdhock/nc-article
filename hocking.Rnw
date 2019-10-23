@@ -388,29 +388,29 @@ these details in order to explain how it works. Note that the result
 from \pkg{stringi} is a character matrix with three columns: first for
 the entire match, and another column for each capture group. Using the
 same pattern with \code{base::regexpr} (PCRE engine) or
-\code{re2r::re2_match} (RE2 engine) would give slightly different
-results (e.g. output when there is no match).
-The \pkg{nc} package takes care of converting these different
-results into a standard format which makes it easy to switch regex
-engines (by changing the value of the \code{engine} argument).
+\code{re2r::re2\_match} (RE2 engine) yields output in varying formats.
+The \pkg{nc} package takes care of converting these different results
+into a standard format which makes it easy to switch regex engines (by
+changing the value of the \code{engine} argument).
 
-Note that the standard format used by \pkg{nc}, as shown in the result
-above from \code{nc::capture\_first\_vec}, is a data table. The main
-reason that data tables are always output by \pkg{nc} matching functions is in
-order to support numeric output columns. A secondary reason is for
-the convenient syntax, as we will show in the next section.
+Note that the standard format used by \pkg{nc}, as shown above with
+\code{nc::capture\_first\_vec}, is a data table. The main reason that
+data tables are always output by \pkg{nc} matching functions is in
+order to support numeric output columns, when type conversion
+functions are specified. A secondary reason is for the convenient
+syntax, as we will show in the next section.
 
 \subsection{Data table integration and
   \code{nc::field} to avoid repetition}
 
 In the previous section we mentioned that every \pkg{nc} matching
 function outputs a data table, which can be
-queried/summarized/joined/etc using a convenient syntax. In this
-section we show an example of how this syntax makes is easy to parse
-non-tabular text output files from a bioinformatics program.  We also
-show an example of how the new \code{nc::field} function can be used
-to avoid repetition when defining a pattern to match fields of the
-form \code{variable=value}.
+queried/summarized/joined/etc using the convenient syntax of the
+\pkg{data.table} package. In this section we show an example of how
+this syntax makes is easy to parse non-tabular text output files from
+a bioinformatics program.  We also show an example of how the new
+\code{nc::field} function can be used to avoid repetition when
+defining a pattern to match fields of the form \code{variable=value}.
 
 We consider a bioinformatics program called SweeD which outputs two
 data files that are linked by an integer alignment ID number
@@ -550,9 +550,10 @@ The output above consists of one copy column (\code{Species}), two
 capture columns (\code{part}, \code{dim}), and a single reshape column
 (\code{cm}). The \code{value.name} argument is not considered part of
 the pattern, and instead specifies the name of the output reshape
-column. The desired histogram may be easily plotted using these data:
+column. These data can be used to create the desired histogram with
+\pkg{ggplot2} via:
 
-<<hist>>=
+<<hist, fig=TRUE, height=2.2, width=5>>=
 library(ggplot2)
 ggplot(iris.tall.single)+facet_grid(part~dim)+
   theme_bw()+theme(panel.spacing=grid::unit(0, "lines"))+
@@ -577,12 +578,14 @@ other named group:
 
 The output above consists of one copy column (\code{Species}), one
 capture columns (\code{dim}), and two reshape columns (\code{Petal},
-\code{Sepal}). The desired scatterplot may be easily plotted using
-these data:
+\code{Sepal}). Note that each unique value captured in the special
+\code{column} capture group becomes an output reshape column
+name. These data can be used to create the scatterplot using
+\pkg{ggplot2} via:
 
-<<hist>>=
+<<scatter, fig=TRUE, height=2, width=5>>=
 ggplot(iris.parts)+facet_grid(.~dim)+
-  theme_bw()+theme(panel.spacing=grid::unit(0, "lines"), legend.position="bottom")+
+  theme_bw()+theme(panel.spacing=grid::unit(0, "lines"))+
   coord_equal()+geom_abline(slope=1, intercept=0, color="grey")+
   geom_point(aes(Petal, Sepal, color=Species), shape=1)
 @
@@ -594,32 +597,54 @@ As a final example we consider a data set from the World Health Organization:
 
 <<who>>=
 data(who, package="tidyr")
-names(who)
-tail(who[, c("country", "year", "new_sp_m014", "new_sn_f5564", "newrel_f65")])
+set.seed(1);sample(names(who), 10)
 
 @
 
-Each reshape column name has three distinct pieces of information:
-diagnosis type, gender, and age group.
-As with the iris data, there are a number of interesting questions
-that can be answered by first reshaping the data (e.g. which age
-groups and diagnosis types are the most frequent).
+Each reshape column name starts with \code{new} and has three distinct
+pieces of information: diagnosis type (e.g. \code{ep}, \code{rel}),
+gender (\code{m} or \code{f}), and age range (e.g. \code{1524},
+\code{4554}). As with the iris data, there are a number of
+interesting questions that can be answered by first reshaping the data
+(e.g. which age groups and diagnosis types are the most frequent).
 
 <<whoreshape>>=
-new.diag.gender <- list(
-  "new_?",
-  diagnosis=".*",
-  "_",
-  gender=".")
+new.diag.gender <- list("new_?", diagnosis=".*", "_", gender=".")
 nc::capture_melt_single(who, new.diag.gender, ages=".*")
-years.pattern <- list(new.diag.gender, ages=list(
-  min.years="0|[0-9]{2}", as.numeric,
-  max.years="[0-9]{0,2}", function(x)ifelse(x=="", Inf, as.numeric(x))))
-(who.typed <- nc::capture_melt_single(
-  who, years.pattern,
-  value.name="count"))
-str(who.typed)
 @
+
+Above we define \code{new.diag.list} which we use as the first part of
+the pattern in the call to \code{nc::capture\_melt\_single} above (and
+we will use that sub-pattern again below). The result is a data table
+in which all three capture columns (\code{diagnosis}, \code{gender},
+\code{ages}) are character vectors, since no type conversion functions
+were specified. If we want to extract two numeric columns from
+\code{ages} (e.g. to use as interval-censored outputs in a survival
+regression), we can provide a different pattern with type conversion
+functions:
+
+<<who2>>=
+who.typed <- nc::capture_melt_single(
+  who, new.diag.gender, ages=list(
+    min.years="0|[0-9]{2}", as.numeric,
+    max.years="[0-9]{0,2}", function(x)ifelse(x=="", Inf, as.numeric(x))),
+  value.name="count")
+str(who.typed)
+
+@ 
+
+To conclude this section, \pkg{nc} provides two new functions for data
+reshaping using regular expressions (\code{nc::capture\_melt\_single}
+and \code{nc::capture\_melt\_multiple}). Both functions input a data
+frame to reshape, and a pattern to match to the column names. For
+\code{nc::capture\_melt\_single} all matching input columns are
+reshaped in the output to a single column with name defined by the
+\code{value.name} argument. For \code{nc::capture\_melt\_multiple} the
+output is multiple reshape columns with names defined by the values
+captured in the special \code{column} group. Values captured in other
+groups are stored in capture columns in the output. Both functions
+support arbitrary type conversion functions, which may be specified in
+order to output numeric capture columns.
 
 \section{Comparison with other packages}
 
