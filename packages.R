@@ -1,0 +1,10 @@
+works_with_R(
+  "3.6.0",
+  "tdhock/nc@e401aa088d0bb67127e5bffae0eef5be76737f4c",
+  bench="1.0.4",
+  data.table="1.12.2",
+  tidyr="1.0.0",
+  reshape2="1.4.3",
+  cdata="1.1.2",
+  microbenchmark="1.4.6",
+  ggplot2="3.2.0")
