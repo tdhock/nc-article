@@ -2,7 +2,7 @@ works_with_R(
   "3.6.0",
   directlabels="2018.5.22",
   data.table="1.0",
-  "tdhock/nc@e401aa088d0bb67127e5bffae0eef5be76737f4c",
+  "tdhock/nc@fed756095c79c77579d5762dda8f6e020ca6ac91",
   bench="1.0.4",
   data.table="1.12.2",
   tidyr="1.0.0",
