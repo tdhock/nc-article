@@ -855,8 +855,14 @@ reshaping packages. detailed timing measurements, in
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.49\textwidth]{figure-who-rows}
-  \includegraphics[width=0.49\textwidth]{figure-who-cols}
+  \includegraphics[width=\textwidth]{figure-who-rows.pdf}
+  \caption{Timings}
+  \label{fig:timings}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figure-who-cols.pdf}
   \caption{Timings}
   \label{fig:timings}
 \end{figure}

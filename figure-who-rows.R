@@ -18,14 +18,14 @@ gg <- ggplot()+
   geom_line(aes(
     N.rows, median, color=expr),
     data=stats.timings)+
-  scale_x_log10(limits=c(NA, max(stats.timings$N.rows)*10))+
+  scale_x_log10(limits=c(NA, max(stats.timings$N.rows)*20))+
   scale_y_log10("Computation time (seconds)")
-dl <- directlabels::direct.label(gg, "last.polygons")
+dl <- directlabels::direct.label(gg, list(cex=0.8, "last.polygons"))
 
-pdf("figure-who-rows.pdf", 3, 3)
+pdf("figure-who-rows.pdf", 7, 2.3)
 print(dl)
 dev.off()
 
-png("figure-who-rows.png", 3, 3, units="in", res=100)
+png("figure-who-rows.png", 7, 2.3, units="in", res=100)
 print(dl)
 dev.off()
