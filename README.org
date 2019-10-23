@@ -6,11 +6,11 @@ Abstract: Regular expressions are powerful tools for extracting tables
   describe information to extract from column names can be especially
   useful when reshaping a data table from wide (one row with many
   columns) to tall (one column with many rows). We present the R
-  package nc, which provides functions for data reshaping, regular
-  expressions, and a uniform interface to three C libraries (PCRE,
-  RE2, ICU). We describe the main features of nc, then provide
-  detailed comparisons with related R packages (stats, utils,
-  data.table, tidyr, reshape2, cdata).
+  package nc (short for named capture), which provides functions for
+  data reshaping, regular expressions, and a uniform interface to
+  three C libraries (PCRE, RE2, ICU). We describe the main features of
+  nc, then provide detailed comparisons with related R packages
+  (stats, utils, data.table, tidyr, reshape2, cdata).
 
 - Output [[file:RJwrapper.pdf]]  
 - Main input/source file to edit is [[file:hocking.Rnw]] 
