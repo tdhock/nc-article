@@ -56,15 +56,10 @@ for(N.rows in N.rows.vec){
         timevar="variable",
         varying=times)
     },
-    "cdata::rowrecs_to_blocks"={
-      is.match <- grepl(who.pattern.simple, names(some.who))
-      result.list$cdata <- cdata::rowrecs_to_blocks(
-        some.who, 
-        cdata::build_unpivot_control(##TODO:SIMPLIFY? 
-          "variable",
-          "count",
-          names(some.who)[is.match]),
-        columnsToCopy=names(some.who)[!is.match])
+    "cdata::unpivot_to_blocks"={
+      result.list$cdata <- cdata::unpivot_to_blocks(
+        some.who, "variable", "value",
+        grep(who.pattern.simple, names(some.who), value=TRUE))
     },
     times=10))
   result.row.vec <- sapply(result.list, nrow)
