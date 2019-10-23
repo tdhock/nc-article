@@ -4,18 +4,19 @@ who.timings <- readRDS("figure-who-rows-data.rds")
 
 who.timings[, seconds := time/1e9]
 stats.timings <- who.timings[, .(
-  mean=mean(seconds),
-  sd=sd(seconds)
+  median=median(seconds),
+  q25=quantile(seconds, 0.25),
+  q75=quantile(seconds, 0.75)
 ), by=.(N.rows, expr)]
 
 gg <- ggplot()+
   theme_bw()+
   geom_ribbon(aes(
-    N.rows, ymin=mean-sd, ymax=mean+sd, fill=expr),
-    alpha=0.5,
+    N.rows, ymin=q25, ymax=q75, fill=expr),
+    alpha=0.2,
     data=stats.timings)+
   geom_line(aes(
-    N.rows, mean, color=expr),
+    N.rows, median, color=expr),
     data=stats.timings)+
   scale_x_log10(limits=c(NA, max(stats.timings$N.rows)*10))+
   scale_y_log10("Computation time (seconds)")

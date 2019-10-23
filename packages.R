@@ -1,5 +1,7 @@
 works_with_R(
   "3.6.0",
+  directlabels="2018.5.22",
+  data.table="1.0",
   "tdhock/nc@e401aa088d0bb67127e5bffae0eef5be76737f4c",
   bench="1.0.4",
   data.table="1.12.2",
