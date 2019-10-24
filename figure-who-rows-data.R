@@ -3,7 +3,6 @@ source("packages.R")
 data(who, package="tidyr")
 who.pattern.simple <- "new_?(.*)_(.)(.*)"
 who.pattern.complex <- "new_?(.*)_(.)((0|[0-9]{2})([0-9]{0,2}))"
-
 N.rows.vec <- as.integer(10^seq(1, 5, by=0.5))
 timing.dt.list <- list()
 for(N.rows in N.rows.vec){

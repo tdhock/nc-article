@@ -1,5 +1,16 @@
 source("packages.R")
 
+pkg.color <- c(
+  "data.table::melt"="#1B9E77",
+  "reshape2::melt"="#D95F02",
+  "tidyr::gather"="#7570B3",
+  "tidyr::pivot_longer"="#7570B3",
+  "cdata::unpivot_to_blocks"="#E7298A",
+  "cdata::rowrecs_to_blocks"="#E7298A",
+  "nc::capture_melt_single"="#66A61E",
+  "stats::reshape"="#E6AB02", 
+  "#A6761D", "#666666")
+
 who.timings <- readRDS("figure-who-cols-data.rds")
 
 who.timings[, seconds := time/1e9]
@@ -11,6 +22,8 @@ stats.timings <- who.timings[, .(
 
 gg <- ggplot()+
   theme_bw()+
+  scale_color_manual(values=pkg.color)+
+  scale_fill_manual(values=pkg.color)+
   geom_ribbon(aes(
     N.col, ymin=q25, ymax=q75, fill=expr),
     alpha=0.2,

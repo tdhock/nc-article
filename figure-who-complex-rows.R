@@ -11,8 +11,7 @@ pkg.color <- c(
   "stats::reshape"="#E6AB02", 
   "#A6761D", "#666666")
 
-
-who.timings <- readRDS("figure-who-rows-data.rds")
+who.timings <- readRDS("figure-who-complex-rows-data.rds")
 
 who.timings[, seconds := time/1e9]
 stats.timings <- who.timings[, .(
@@ -35,13 +34,15 @@ gg <- ggplot()+
   scale_x_log10(
     breaks=10^seq(1, 5, by=1),
     limits=c(NA, max(stats.timings$N.rows)*20))+
-  scale_y_log10("Computation time (seconds)")
+  scale_y_log10(
+    "Computation time (seconds)",
+    limits=c(0.01, 10))
 dl <- directlabels::direct.label(gg, list(cex=0.8, "last.polygons"))
 
-pdf("figure-who-rows.pdf", 7, 2.3)
+pdf("figure-who-complex-rows.pdf", 7, 2.3)
 print(dl)
 dev.off()
 
-png("figure-who-rows.png", 7, 2.3, units="in", res=100)
+png("figure-who-complex-rows.png", 7, 2.3, units="in", res=100)
 print(dl)
 dev.off()
