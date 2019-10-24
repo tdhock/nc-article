@@ -27,8 +27,8 @@ for(N.rows in N.rows.vec){
         some.who,
         who.pattern.nc)
     },
-    "tidyr::pivot_longer"={
-      result.list[["pivot"]] <- transform(tidyr::pivot_longer(
+    "tidyr::pivot_longer+transform"={
+      result.list[["transform"]] <- transform(tidyr::pivot_longer(
         some.who,
         grep(who.pattern.args$pattern, names(some.who)),
         values_drop_na = TRUE,
@@ -36,7 +36,18 @@ for(N.rows in N.rows.vec){
         names_pattern=who.pattern.args$pattern),
         ymax=who.pattern.args$fun.list$ymax(ymax),
         ymin=who.pattern.args$fun.list$ymin(ymin),
-        gender=who.pattern.args$fun.list$gender(gender))        
+        gender=who.pattern.args$fun.list$gender(gender))
+    },
+    "tidyr::pivot_longer+mutate"={
+      result.list[["mutate"]] <- dplyr::mutate(tidyr::pivot_longer(
+        some.who,
+        grep(who.pattern.args$pattern, names(some.who)),
+        values_drop_na = TRUE,
+        names_to=names(who.pattern.args$fun.list),
+        names_pattern=who.pattern.args$pattern),
+        ymax=who.pattern.args$fun.list$ymax(ymax),
+        ymin=who.pattern.args$fun.list$ymin(ymin),
+        gender=who.pattern.args$fun.list$gender(gender))
     },
     times=10))
   convert <- function(df){
