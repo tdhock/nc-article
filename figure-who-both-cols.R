@@ -11,24 +11,21 @@ pkg.color <- c(
   "stats::reshape"="#E6AB02",
   "utils::stack"="#E6AB02",
   "#A6761D", "#666666")
-
+complex <- readRDS("figure-who-complex-cols-data.rds")
+simple <- readRDS("figure-who-cols-data.rds")
 who.timings <- rbind(
-  data.table(
-    "capture groups"=3, "type conversions"=0,
-    readRDS("figure-who-rows-data.rds")),
-  data.table(
-    "capture groups"=5, "type conversions"=3,
-    readRDS("figure-who-complex-rows-data.rds"))
-)[!grepl("[+]", expr)]
+  data.table("capture groups"=3, "type conversions"=0, simple[, names(complex), with=FALSE]),
+  data.table("capture groups"=5, "type conversions"=3, complex))
+
 who.timings[, seconds := time/1e9]
 stats.timings <- who.timings[, .(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
-), by=.(`capture groups`, `type conversions`, N.rows, expr)]
+), by=.(`capture groups`, `type conversions`, N.col, expr)]
 
 gg <- ggplot()+
-  ggtitle("Single reshape output column, variable number of input rows")+
+  ggtitle("Single reshape output column, variable number of input columns")+
   theme_bw()+
   theme(panel.spacing=grid::unit(0, "lines"))+
   scale_color_manual(values=pkg.color)+
@@ -38,26 +35,23 @@ gg <- ggplot()+
     ##scales="free",
     labeller=label_both)+
   geom_line(aes(
-    N.rows, median, color=expr),
+    N.col, median, color=expr),
     data=stats.timings)+
   geom_ribbon(aes(
-    N.rows, ymin=q25, ymax=q75, fill=expr),
+    N.col, ymin=q25, ymax=q75, fill=expr),
     alpha=0.2,
     data=stats.timings)+
   scale_x_log10(
-    "Number of rows in wide input data table",
-    breaks=10^seq(1, 5, by=1),
-    limits=c(NA, max(stats.timings$N.rows)*20))+
-  scale_y_log10(
-    "Computation time (seconds)",
-    breaks=10^seq(-3, 1, by=1),
-    limits=c(NA, 10))
+    "Number of columns to reshape in wide input data table",
+    breaks=10^seq(1, 4, by=1),
+    limits=c(NA, max(stats.timings$N.col)*3))+
+  scale_y_log10("Computation time (seconds)")
 dl <- directlabels::direct.label(gg, list(cex=0.75, "last.polygons"))
 
-pdf("figure-who-both-rows.pdf", 7, 3)
+pdf("figure-who-both-cols.pdf", 7, 3)
 print(dl)
 dev.off()
 
-png("figure-who-both-rows.png", 7, 3, units="in", res=100)
+png("figure-who-both-cols.png", 7, 3, units="in", res=100)
 print(dl)
 dev.off()

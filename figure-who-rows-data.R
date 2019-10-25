@@ -56,6 +56,10 @@ for(N.rows in N.rows.vec){
         timevar="variable",
         varying=times)
     },
+    "utils::stack"={
+      result.list$utils <- utils::stack(
+        some.who, grep(who.pattern.simple, names(some.who)))
+    },
     "cdata::unpivot_to_blocks"={
       result.list$cdata <- cdata::unpivot_to_blocks(
         some.who, "variable", "value",
