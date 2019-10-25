@@ -49,7 +49,7 @@ for(N.rep in N.rep.vec){
         direction="long",
         varying=1:(ncol(some.iris)-1))
     })
-    m.args[["cdata::unpivot_to_blocks"]] <- quote({
+    m.args[["cdata::rowrecs_to_blocks"]] <- quote({
       part.list <- list()
       for(part in c("Petal", "Sepal")){
         part.list[[part]] <- grep(part, names(some.iris), value=TRUE)

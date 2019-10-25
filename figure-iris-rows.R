@@ -14,7 +14,7 @@ pkg.color <- c(
 
 iris.timings <- rbind(
   data.table(
-    "capture groups"=2, "type conversions"=0,
+    "capture groups"=3, "type conversions"=0,
     readRDS("figure-iris-rows-data.rds")),
   data.table(
     "capture groups"=3, "type conversions"=1,

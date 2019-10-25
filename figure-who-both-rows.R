@@ -24,8 +24,13 @@ who.timings[, seconds := time/1e9]
 stats.timings <- who.timings[, .(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
-  q75=quantile(seconds, 0.75)
+  q75=quantile(seconds, 0.75),
+  mean=mean(seconds),
+  sd=sd(seconds)
 ), by=.(`capture groups`, `type conversions`, N.rows, expr)]
+
+stats.timings[`capture groups`==3 & N.rows==10^5, .(N.rows, expr, median)][order(-median)]
+stats.timings[`capture groups`==5 & N.rows==10^5, .(N.rows, expr, mean, sd)][order(-mean)]
 
 gg <- ggplot()+
   ggtitle("Single reshape output column, variable number of input rows")+

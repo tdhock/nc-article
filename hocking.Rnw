@@ -621,7 +621,7 @@ may specify a prototype for each group, which results in a limited
 range of possible conversions. Of course, post-processing may be used,
 but that introduces some repetition (of capture column names) in the
 code. For example, consider a data set from the World Health
-Organization:
+Organization (WHO):
 
 <<who>>= 
 data(who, package = "tidyr")
@@ -838,52 +838,151 @@ may be necessary using other functions (\code{data.table::melt},
 with \pkg{cdata}, whereas a terse/implicit regular expression syntax is
 used with \pkg{nc} to simplify the definition of reshape operations.
 
-\subsection{Timings}
+\subsection{Comparing computation times}
 
-In this section we investigate the relative speed of several data
-reshaping packages. detailed timing measurements, in FOO
+In previous sections we have showed that the \pkg{nc} package provides
+a convenient syntax for defining wide-to-tall reshape operations. In
+this section we investigate whether this convenience comes at the cost
+of increased computation time. We aim to demonstrate that computation
+time required for the proposed \pkg{nc} package is comparable with
+other packages for data reshaping. In particular, since \pkg{nc} is
+implemented using \pkg{data.table}, we expect that \pkg{nc} should be
+slightly slower than \pkg{data.table} (by only constant factors).
+
+First, we performed timings on reshaping a version of the WHO data
+with a variable number of rows, and a fixed number of columns (56). As
+in the previous section, we first consider a pattern with three
+capture groups and no type conversions. We ran reshaping functions
+from several packages (\pkg{nc}, \pkg{stats}, \pkg{utils},
+\pkg{tidyr}, \pkg{reshape2}, \pkg{data.table}, \pkg{cdata}) that can
+compute the desired output table with a single reshape output
+column. As we expected, all functions appear to have similar
+asymptotic time complexity, and differ only in terms of constant
+factors (Figure~\ref{fig:timings-single-cols}, top). The slowest
+function was \code{stats::reshape} (several seconds for $10^5$ rows)
+and the fastest function was \code{utils::stack} (about 10
+milliseconds). The other functions, including
+\code{nc::capture\_melt\_single}, showed intermediate speeds (100 to
+600 milliseconds).
+% > stats.timings[`capture groups`==3 & N.rows==10^5, .(N.rows, expr, median)][order(-median)]
+%    N.rows                     expr     median
+% 1: 100000           stats::reshape 6.23666040
+% 2: 100000  nc::capture_melt_single 0.59440396
+% 3: 100000      tidyr::pivot_longer 0.44018784
+% 4: 100000 cdata::unpivot_to_blocks 0.40475522
+% 5: 100000            tidyr::gather 0.17639912
+% 6: 100000           reshape2::melt 0.09953679
+% 7: 100000         data.table::melt 0.09524751
+% 8: 100000             utils::stack 0.01473991
+
+As in the previous section, we also tried using a regular expression
+with five capture groups and three type conversions for capture output
+columns (\code{gender} to factor, \code{ymin} and \code{ymax} to
+numeric). In this test, we ran only \code{tidyr::pivot\_longer} and
+\code{nc::capture\_melt\_single} because these are the only two
+functions which natively support capture output columns. They both
+appear to have similar asymptotic time complexity
+(Figure~\ref{fig:timings-single-cols}, bottom), although
+\code{nc::capture\_melt\_single} ($\text{mean}\pm\text{sd}$, $0.178\pm
+0.037$ seconds for $10^5$ rows) is
+about ten times faster than \code{tidyr::pivot\_longer}
+($1.111\pm 0.038$).
+% > stats.timings[`capture groups`==5 & N.rows==10^5, .(N.rows, expr, mean, sd)][order(-mean)]
+%    N.rows                    expr      mean         sd
+% 1: 100000     tidyr::pivot_longer 1.1117841 0.03833242
+% 2: 100000 nc::capture_melt_single 0.1780302 0.03727452
+% > 
 
 \begin{figure}
   \centering
   \includegraphics[width = \textwidth]{figure-who-both-rows.pdf}
-  \caption{Timings for wide-to-tall data reshaping on an input data
-    table with 56 columns to reshape and a variable number of rows (x
-    axis). \textbf{Top} panel shows functions which provide some
-    wide-to-tall data reshaping functionality; \textbf{Bottom} panel
-    shows only the functions which output capture columns based
-    on a regular expression.}
+  \caption{Timings for computing a tall output table with a single
+    reshape column from a wide input table with
+    56 reshape columns and
+    a variable number of rows
+    (x axis). \textbf{Top} panel shows
+    functions which provide some wide-to-tall data reshaping
+    functionality; \textbf{Bottom} panel shows only the functions
+    which output capture columns based on a regular expression.}
   \label{fig:timings-single-rows}
 \end{figure}
+
+Second, we performed similar timings on variants of the WHO data with
+a variable number of columns, and a fixed number of rows (7240). The
+desired output again has a single reshape output column, and we tried
+the same two regular expressions and type conversions as in the
+previous test with a variable number of rows. We observed similar
+asymptotic trends as in the previous comparison
+(Figure~\ref{fig:timings-single-cols}). These data indicate that for
+converting data into a single reshaping output column, \pkg{nc} is as
+fast or faster than comparable R packages.
+
+% > stats.timings[`capture groups`==3][N.col==max(N.col), .(N.col, expr, median)][order(median)]
+
+%    N.col                     expr      median
+% 1:  1796             utils::stack  0.09102206
+% 2:  1796           reshape2::melt  0.24715609
+% 3:  1796         data.table::melt  0.28116050
+% 4:  1796            tidyr::gather  0.43337657
+% 5:  1796 cdata::unpivot_to_blocks  0.68150276
+% 6:  1796      tidyr::pivot_longer  1.15550911
+% 7:  1796  nc::capture_melt_single  1.48272495
+% 8:  1796           stats::reshape 15.67225194
+% > stats.timings[`capture groups`==5][N.col==max(N.col), .(N.col, expr, mean, sd)][order(-mean)]
+%    N.col                    expr     mean         sd
+% 1:  5660     tidyr::pivot_longer 8.481555 0.09183717
+% 2:  5660 nc::capture_melt_single 1.256046 0.07065709
+% > 
 
 \begin{figure}
   \centering
   \includegraphics[width = \textwidth]{figure-who-both-cols.pdf}
-  \caption{Timings for wide-to-tall data reshaping on an input data
-    table with 7240 rows and a variable number of columns to
-    reshape (x axis). \textbf{Top} panel shows functions which provide some
+  \caption{
+    Timings for computing a tall output table with a single
+    reshape column from a wide input table
+    with 7240 rows and a variable number of columns to
+    reshape    
+    (x axis).
+    \textbf{Top} panel shows functions which provide some
     wide-to-tall data reshaping functionality; \textbf{Bottom} panel
     shows only the functions which output capture columns based
     on a regular expression.}
   \label{fig:timings-single-cols}
 \end{figure}
 
-\begin{figure}
-  \centering 
-  \includegraphics[width = \textwidth]{figure-iris-cols.pdf}
-  \caption{Timings for wide-to-tall data reshaping on an input data
-    table with 7240 rows and a variable number of columns to
-    reshape (x axis). \textbf{Top} panel shows functions which provide some
-    wide-to-tall data reshaping functionality; \textbf{Bottom} panel
-    shows only the functions which output capture columns based
-    on a regular expression.}
-  \label{fig:timings-multiple-cols}
-\end{figure}
+Third, we performed timings on variants of the iris data with
+a variable number of rows, and a fixed number of columns (8).  TODO
 
 \begin{figure}
   \centering 
   \includegraphics[width = \textwidth]{figure-iris-rows.pdf}
-  \caption{Timings for wide-to-tall data reshaping on an input data
-    table with 7240 rows and a variable number of columns to
+  \caption{
+    Timings for computing a tall output table with multiple (2)
+    reshape columns from a wide input table with
+    8 reshape columns and
+    a variable number of rows
+    (x axis).
+    \textbf{Top} panel shows functions which provide some
+    wide-to-tall data reshaping functionality; \textbf{Bottom} panel
+    shows only the functions which output capture columns based on a
+    regular expression.}
+  \label{fig:timings-multiple-cols}
+\end{figure}
+
+Finally, we performed similar timings on variants of the iris data with
+a variable number of columns, and a fixed number of rows (150).  TODO
+
+\begin{figure}
+  \centering 
+  \includegraphics[width = \textwidth]{figure-iris-cols.pdf}
+  \caption{    
+    Timings for computing a tall output table with multiple
+    reshape columns (2) from a wide input table
+    with 150 rows and a variable number of columns to
+    reshape    
+    (x axis).
+    Timings for wide-to-tall data reshaping on an input data
+    table with 150 rows and a variable number of columns to
     reshape (x axis). \textbf{Top} panel shows functions which provide some
     wide-to-tall data reshaping functionality; \textbf{Bottom} panel
     shows only the functions which output capture columns based
@@ -892,6 +991,10 @@ reshaping packages. detailed timing measurements, in FOO
 \end{figure}
 
 \section{Discussion and conclusions}
+
+The fastest function in our speed comparisons was often
+\code{utils::stack}, which makes sense because it provides the least
+features (Table\ref{tab:features}).
 
 TODO One versus two functions.
 

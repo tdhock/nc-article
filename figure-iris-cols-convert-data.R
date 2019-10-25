@@ -11,7 +11,7 @@ iris.reshape.cols <- iris[, 1:4]
 
 names_to <- names(iris.pattern.args$fun.list)
 names_to[names_to=="column"] <- ".value"
-N.rep.vec <- as.integer(c(0, 10^seq(0, 4, by=0.5)))
+N.rep.vec <- as.integer(c(0, 10^seq(0, 5, by=0.5)))
 timing.dt.list <- list()
 for(N.rep in N.rep.vec){
   print(N.rep)

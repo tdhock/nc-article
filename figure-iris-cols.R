@@ -27,8 +27,22 @@ stats.timings <- iris.timings[, .(
   q75=quantile(seconds, 0.75)
 ), by=.(`capture groups`, `type conversions`, N.col, expr)]
 
+ref.dt <- data.table(
+  seconds=c(60, 1),
+  unit=c("minute", "second"))
+
 gg <- ggplot()+
   ggtitle("Multiple reshape output columns, variable number of input columns")+
+  geom_hline(aes(
+    yintercept=seconds),
+    color="grey",
+    data=ref.dt)+
+  geom_text(aes(
+    10, seconds, label=paste(1, unit)),
+    data=ref.dt,
+    color="grey",
+    hjust=0,
+    vjust=-0.5)+
   theme_bw()+
   theme(panel.spacing=grid::unit(0, "lines"))+
   scale_color_manual(values=pkg.color)+
