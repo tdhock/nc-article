@@ -5,20 +5,22 @@ pkg.color <- c(
   "reshape2::melt"="#D95F02",
   "tidyr::gather"="#7570B3",
   "tidyr::pivot_longer"="#7570B3",
+  "tidyr::pivot_longer+mutate"="#7570B3",
+  "tidyr::pivot_longer+transform"="#7570B3",
   "cdata::unpivot_to_blocks"="#E7298A",
   "cdata::rowrecs_to_blocks"="#E7298A",
   "nc::capture_melt_single"="#66A61E",
-  "stats::reshape"="#E6AB02", 
+  "stats::reshape"="#E6AB02",
   "#A6761D", "#666666")
 
 who.timings <- readRDS("figure-who-complex-rows-data.rds")
-
+who.timings[, fun := sub("[+].*", "", expr) ]
 who.timings[, seconds := time/1e9]
 stats.timings <- who.timings[, .(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
-), by=.(N.rows, expr)]
+), by=.(N.rows, expr, fun)]
 
 gg <- ggplot()+
   theme_bw()+

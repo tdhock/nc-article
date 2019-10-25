@@ -27,6 +27,18 @@ for(N.rows in N.rows.vec){
         some.who,
         who.pattern.nc)
     },
+    "tidyr::pivot_longer"={
+      result.list[["transform"]] <- transform(tidyr::pivot_longer(
+        some.who,
+        grep(who.pattern.args$pattern, names(some.who)),
+        values_drop_na = TRUE,
+        names_to=names(who.pattern.args$fun.list),
+        names_pattern=who.pattern.args$pattern,
+        names_ptypes=lapply(
+          who.pattern.args$fun.list[c("gender", "ymin")],
+          function(f)f(character()))),
+        ymax=who.pattern.args$fun.list$ymax(ymax))
+    },
     "tidyr::pivot_longer+transform"={
       result.list[["transform"]] <- transform(tidyr::pivot_longer(
         some.who,
