@@ -46,7 +46,7 @@ gg <- ggplot()+
     data=stats.timings)+
   scale_x_log10(
     "Number of rows in wide input data table",
-    limits=c(NA, max(stats.timings$N.row)*20))+
+    limits=c(NA, max(stats.timings$N.row)*30))+
   scale_y_log10(
     "Computation time (seconds)")
 dl <- directlabels::direct.label(gg, list(cex=0.75, "last.polygons"))
