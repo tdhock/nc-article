@@ -917,8 +917,8 @@ and we tried the same two regular expressions and type conversions as
 in the tests described earlier in this section. We
 observed similar asymptotic trends as in the previous comparison
 (Figure~\ref{fig:timings-single-cols}). These data indicate that for
-converting data into a single reshape output column, \pkg{nc} is as
-fast or faster than comparable R packages.
+converting data into a single reshape output column, \pkg{nc} has
+similar or faster speeds than comparable R packages.
 
 % > stats.timings[`capture groups`==3][N.col==max(N.col), .(N.col, expr, median)][order(median)]
 
@@ -1000,7 +1000,10 @@ the log-log plot, which implies that they asymptotically faster than
 the other packages (Figure~\ref{fig:timings-multiple-cols}). These
 data suggest that \pkg{nc} or \pkg{data.table} should be preferred
 over the other packages (\pkg{cdata}, \pkg{stats}, \pkg{tidyr}) for
-fast data reshaping when there are many input columns to convert.
+fast conversion into multiple reshape output columns when there are
+many input reshape columns. Overall, our experiments indicate that
+for converting data to multiple reshape output columns, \pkg{nc} has
+similar or faster speeds than comparable R packages.
 
 \begin{figure}
   \centering 
@@ -1054,28 +1057,37 @@ type conversions. Also, our empirical timings suggest that \pkg{nc}
 is faster when there are type conversions, or when there are many
 input reshape columns and multiple output reshape columns.
 
+We observed a surprising result in our empirical timings with multiple
+reshape output columns and a variable number of reshape input
+columns. We expected that all of the packages would have similar
+asymptotic timings (differing only in terms of constant
+factors). However we observed that \pkg{nc} and its dependent package
+\pkg{data.table} had much faster asymptotic timings than other R
+packages (\pkg{cdata}, \pkg{stats}, \pkg{tidyr}). This result suggests
+that the speed of these other packages could be improved by adopting
+the algorithm used in the \pkg{data.table} package.
+
 In \pkg{nc} there are two different functions for wide-to-tall data
 reshaping: \code{nc::capture\_melt\_single} computes a single output
 reshape column, and \code{nc::capture\_melt\_multiple} computes
 multiple output reshape columns. In contrast, other functions that
 support multiple output reshape columns also support a single output
 reshape column (Table\ref{tab:features}). It is natural to ask whether
-the functionality in these two \pkg{nc} functions could be combined
-into a single function that could handle both kinds of output. Of
-course it is possible, but we prefer to keep the two functions
-separate in order to provide more specific/informative documentation,
-examples, and error messages.
+these two \pkg{nc} functions could be combined into a single function
+that could handle both kinds of output. Of course it is possible, but
+we prefer to keep the two functions separate in order to provide more
+specific/informative documentation, examples, and error messages.
 
 We have shown how the \pkg{nc} package provides a powerful and
 efficient new syntax for wide-to-tall data reshaping using regular
 expressions. The inverse operation, tall-to-wide data reshaping, is
-not supported in \pkg{nc}; the focus in \pkg{nc} is regular
-expressions, which are not useful for tall-to-wide reshaping
-operations. Instead, we recommend using \pkg{data.table}, which
-provides an efficient implementation of tall-to-wide reshaping
-operations. For future work, we are interested to explore other
-operations related to machine learning and data visualization which
-could be simplified using regular expressions.
+not supported; the focus in \pkg{nc} is regular expressions, which are
+not useful for tall-to-wide reshaping operations. Instead, we
+recommend using \pkg{data.table}, which provides an efficient
+implementation of tall-to-wide reshaping operations. For future work,
+we are interested to explore other operations related to machine
+learning and data visualization which could be simplified using
+regular expressions.
 
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from
