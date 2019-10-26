@@ -20,6 +20,8 @@ iris.timings <- rbind(
     "capture groups"=3, "type conversions"=1,
     readRDS("figure-iris-cols-convert-data.rds")))
 
+fwrite(iris.timings, "figure-iris-cols.csv")
+
 iris.timings[, seconds := time/1e9]
 stats.timings <- iris.timings[, .(
   median=median(seconds),
