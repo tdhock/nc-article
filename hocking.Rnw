@@ -847,23 +847,26 @@ of increased computation time. We aim to demonstrate that computation
 time required for the proposed \pkg{nc} package is comparable with
 other packages for data reshaping. In particular, since \pkg{nc} is
 implemented using \pkg{data.table}, we expect that \pkg{nc} should be
-slightly slower than \pkg{data.table} (by only constant factors).
+slightly slower than \pkg{data.table} (by only constant factors). For
+each timing experiment we used the \CRANpkg{microbenchmark} package on
+a computer with a TODO processor. We varied the number of rows/columns
+in each experiment by copying/duplicating the rows/columns in each
+source data set. 
 
-First, we performed timings on reshaping a version of the WHO data
-with a variable number of rows, and a fixed number of columns (56). As
-in the previous section, we first consider a pattern with three
-capture groups and no type conversions. We ran reshaping functions
-from several packages (\pkg{nc}, \pkg{stats}, \pkg{utils},
-\pkg{tidyr}, \pkg{reshape2}, \pkg{data.table}, \pkg{cdata}) that can
-compute the desired output table with a single reshape output
-column. As we expected, all functions appear to have similar
-asymptotic time complexity, and differ only in terms of constant
-factors (Figure~\ref{fig:timings-single-cols}, top). The slowest
-function was \code{stats::reshape} (several seconds for $10^5$ rows)
-and the fastest function was \code{utils::stack} (about 10
-milliseconds). The other functions, including
-\code{nc::capture\_melt\_single}, showed intermediate speeds (100 to
-600 milliseconds).
+First, we performed timings on a version of the WHO data with a
+variable number of rows, and the original number of columns (56). As in the
+previous section, we first consider a pattern with three capture
+groups and no type conversions. We ran reshaping functions from
+several packages (\pkg{nc}, \pkg{stats}, \pkg{utils}, \pkg{tidyr},
+\pkg{reshape2}, \pkg{data.table}, \pkg{cdata}) that can compute the
+desired output table with a single reshape output column. As we
+expected, all functions appear to have similar asymptotic time
+complexity, and differ only in terms of constant factors
+(Figure~\ref{fig:timings-single-cols}, top). The slowest function was
+\code{stats::reshape} (several seconds for $10^5$ rows) and the
+fastest function was \code{utils::stack} (about 10 milliseconds). The
+other functions, including \code{nc::capture\_melt\_single}, showed
+intermediate speeds (100 to 600 milliseconds).
 % > stats.timings[`capture groups`==3 & N.rows==10^5, .(N.rows, expr, median)][order(-median)]
 %    N.rows                     expr     median
 % 1: 100000           stats::reshape 6.23666040
@@ -908,13 +911,13 @@ about ten times faster than \code{tidyr::pivot\_longer}
 \end{figure}
 
 Second, we performed similar timings on variants of the WHO data with
-a variable number of columns, and a fixed number of rows (7240). The
-desired output again has a single reshape output column, and we tried
-the same two regular expressions and type conversions as in the
-previous test with a variable number of rows. We observed similar
-asymptotic trends as in the previous comparison
+a variable number of columns, and the original number of rows
+(7240). The desired output again has a single reshape output column,
+and we tried the same two regular expressions and type conversions as
+in the tests described earlier in this section. We
+observed similar asymptotic trends as in the previous comparison
 (Figure~\ref{fig:timings-single-cols}). These data indicate that for
-converting data into a single reshaping output column, \pkg{nc} is as
+converting data into a single reshape output column, \pkg{nc} is as
 fast or faster than comparable R packages.
 
 % > stats.timings[`capture groups`==3][N.col==max(N.col), .(N.col, expr, median)][order(median)]
@@ -938,6 +941,7 @@ fast or faster than comparable R packages.
   \centering
   \includegraphics[width = \textwidth]{figure-who-both-cols.pdf}
   \caption{
+    \vskip -0.5cm
     Timings for computing a tall output table with a single
     reshape column from a wide input table
     with 7240 rows and a variable number of columns to
@@ -950,8 +954,24 @@ fast or faster than comparable R packages.
   \label{fig:timings-single-cols}
 \end{figure}
 
-Third, we performed timings on variants of the iris data with
-a variable number of rows, and a fixed number of columns (8).  TODO
+Third, we performed timings on variants of the iris data with a
+variable number of rows, and twice the original number of reshape
+columns (8). The input reshape column names were of the form
+\code{day1.Sepal.Length}, \code{day2.Sepal.Length},
+\code{day1.Sepal.Width}, etc. Since the desired output has two reshape
+columns (\code{Sepal} and \code{Petal}), we considered packages which
+support multiple output columns (\pkg{cdata}, \pkg{stats},
+\pkg{tidyr}, \pkg{nc}, \pkg{data.table}). As in the previous tests, we
+tried one experiment without type conversions (for which we tested all
+packages), and one experiment with
+type conversion (for which we only tested \pkg{tidyr} and  \pkg{nc}).
+%In both experiments we used a regular expression with
+%three capture groups (\code{day}, \code{part}, \code{dim}). 
+In both experiments we observed that all algorithms have similar
+asymptotic time complexity (Figure~\ref{fig:timings-multiple-rows}). We
+observed that \pkg{nc} is slightly faster than \pkg{cdata} and
+\pkg{stats}, and slightly slower than \code{data.table} (by constant
+factors).
 
 \begin{figure}
   \centering 
@@ -966,11 +986,21 @@ a variable number of rows, and a fixed number of columns (8).  TODO
     wide-to-tall data reshaping functionality; \textbf{Bottom} panel
     shows only the functions which output capture columns based on a
     regular expression.}
-  \label{fig:timings-multiple-cols}
+  \label{fig:timings-multiple-rows}
 \end{figure}
 
-Finally, we performed similar timings on variants of the iris data with
-a variable number of columns, and a fixed number of rows (150).  TODO
+Finally, we performed similar timings on variants of the iris data
+with a variable number of columns, and the original number of rows
+(150). Again there are three desired reshape output columns, and we
+tested a regular expression with three capture groups (with or without
+type conversion). As in previous experiments, we expected that all
+functions would have similar asymptotic time complexity. Surprisingly,
+we observed that \pkg{nc} and \pkg{data.table} have smaller slopes on
+the log-log plot, which implies that they asymptotically faster than
+the other packages (Figure~\ref{fig:timings-multiple-cols}). These
+data suggest that \pkg{nc} or \pkg{data.table} should be preferred
+over the other packages (\pkg{cdata}, \pkg{stats}, \pkg{tidyr}) for
+fast data reshaping when there are many input columns to convert.
 
 \begin{figure}
   \centering 
@@ -992,15 +1022,60 @@ a variable number of columns, and a fixed number of rows (150).  TODO
 
 \section{Discussion and conclusions}
 
-The fastest function in our speed comparisons was often
-\code{utils::stack}, which makes sense because it provides the least
-features (Table\ref{tab:features}).
+In this paper we described the new functions in \pkg{nc} for data
+reshaping using regular expressions. The \pkg{nc} package allows a
+user to define a regular expression in R code, along with capture
+group names and corresponding type conversion functions. We showed how
+this syntax makes it easy to define complex regular expressions in
+terms of simpler sub-patterns, while providing a uniform interface to
+three regex engines (ICU, PCRE, RE2). We showed several examples of
+how \pkg{nc} can be used for parsing non-tabular text data, and for
+wide-to-tall data reshaping. We provided a detailed comparison with
+other R packages in terms of syntax, functionality, and computation
+time.
 
-TODO One versus two functions.
+In all of our speed comparisons, we observed that \pkg{nc} is at least
+as fast as comparable R packages. In general, we observed that other
+functions which provide fewer features are slightly faster, and other
+functions which provide more features are slightly slower (by constant
+factors). For example, the fastest function for converting data into a
+single reshape output column was \code{utils::stack}. This empirical
+observation is consistent with our theoretical assessment of this
+function (Table\ref{tab:features}); since it provides the fewest
+features, it does the least amount of work, and should be the
+fastest. 
 
-TODO arbitrary type conversion.
+The \code{tidyr::pivot\_longer} function provides a feature set which
+is most similar to \pkg{nc}. We showed that both packages can perform
+the same data reshaping operations, but with different syntax. When
+the input reshape column names are regular, \pkg{nc} may be preferable
+in order to avoid repetition and to support a wider range of possible
+type conversions. Also, our empirical timings suggest that \pkg{nc}
+is faster when there are type conversions, or when there are many
+input reshape columns and multiple output reshape columns.
 
-TODO no support for tall-to-wide, just use data.table.
+In \pkg{nc} there are two different functions for wide-to-tall data
+reshaping: \code{nc::capture\_melt\_single} computes a single output
+reshape column, and \code{nc::capture\_melt\_multiple} computes
+multiple output reshape columns. In contrast, other functions that
+support multiple output reshape columns also support a single output
+reshape column (Table\ref{tab:features}). It is natural to ask whether
+the functionality in these two \pkg{nc} functions could be combined
+into a single function that could handle both kinds of output. Of
+course it is possible, but we prefer to keep the two functions
+separate in order to provide more specific/informative documentation,
+examples, and error messages.
+
+We have shown how the \pkg{nc} package provides a powerful and
+efficient new syntax for wide-to-tall data reshaping using regular
+expressions. The inverse operation, tall-to-wide data reshaping, is
+not supported in \pkg{nc}; the focus in \pkg{nc} is regular
+expressions, which are not useful for tall-to-wide reshaping
+operations. Instead, we recommend using \pkg{data.table}, which
+provides an efficient implementation of tall-to-wide reshaping
+operations. For future work, we are interested to explore other
+operations related to machine learning and data visualization which
+could be simplified using regular expressions.
 
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from
