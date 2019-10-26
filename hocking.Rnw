@@ -995,10 +995,27 @@ with a variable number of columns, and the original number of rows
 tested a regular expression with three capture groups (with or without
 type conversion). As in previous experiments, we expected that all
 functions would have similar asymptotic time complexity. Surprisingly,
-we observed that \pkg{nc} and \pkg{data.table} have smaller slopes on
-the log-log plot, which implies that they asymptotically faster than
-the other packages (Figure~\ref{fig:timings-multiple-cols}). These
-data suggest that \pkg{nc} or \pkg{data.table} should be preferred
+we observed on the log-log plot
+(Figure~\ref{fig:timings-multiple-cols}) that \pkg{nc} and
+\pkg{data.table} have smaller asymptotic slopes (0.91--1.08) than the
+other packages (1.85--2.15). These data suggest that the computation
+time of \pkg{nc} and \pkg{data.table} is linear $O(C)$ for $C$
+columns, whereas the other packages are quadratic $O(C^2)$.
+%% > stats.timings[N.col>4000, {
+%% + fit <- lm(log10(median) ~ log10(N.col))
+%% + w <- coef(fit)
+%% + data.table(intercept=w[1], slope=w[2])
+%% + }, by=.(`type conversions`, expr)][order(slope)]
+%%    type conversions                      expr intercept     slope
+%% 1:                1 nc::capture_melt_multiple -4.196213 0.9198872
+%% 2:                0 nc::capture_melt_multiple -4.587477 1.0200630
+%% 3:                0          data.table::melt -5.199096 1.0845269
+%% 4:                1       tidyr::pivot_longer -7.471493 1.8536051
+%% 5:                0       tidyr::pivot_longer -7.669319 1.8885024
+%% 6:                0            stats::reshape -7.171669 2.0554691
+%% 7:                0  cdata::rowrecs_to_blocks -7.233112 2.1561142
+%% > 
+Therefore \pkg{nc} or \pkg{data.table} should be preferred
 over the other packages (\pkg{cdata}, \pkg{stats}, \pkg{tidyr}) for
 fast conversion into multiple reshape output columns when there are
 many input reshape columns. Overall, our experiments indicate that
@@ -1058,14 +1075,15 @@ is faster when there are type conversions, or when there are many
 input reshape columns and multiple output reshape columns.
 
 We observed a surprising result in our empirical timings with multiple
-reshape output columns and a variable number of reshape input
-columns. We expected that all of the packages would have similar
-asymptotic timings (differing only in terms of constant
-factors). However we observed that \pkg{nc} and its dependent package
-\pkg{data.table} had much faster asymptotic timings than other R
-packages (\pkg{cdata}, \pkg{stats}, \pkg{tidyr}). This result suggests
-that the speed of these other packages could be improved by adopting
-the algorithm used in the \pkg{data.table} package.
+reshape output columns and a variable number of reshape input columns
+$C$. We expected that all of the packages would have similar
+asymptotic timings (differing only in constant factors). However for
+large $C$ we observed that \pkg{nc} and its dependent package
+\pkg{data.table} were linear $O(C)$, which was much faster than the
+other packages which were quadratic $O(C^2)$ (\pkg{cdata},
+\pkg{stats}, \pkg{tidyr}). This result suggests that the speed of
+these other packages could be improved by adopting the linear time
+algorithm used in the \pkg{data.table} package.
 
 In \pkg{nc} there are two different functions for wide-to-tall data
 reshaping: \code{nc::capture\_melt\_single} computes a single output

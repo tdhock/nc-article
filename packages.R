@@ -68,10 +68,9 @@ works_with_R(
   directlabels="2018.5.22",
   data.table="1.12.2",
   "tdhock/nc@4993b2e0865c4b71771c810b85e0d9718757b763",
-  bench="1.0.4",
-  data.table="1.12.2",
+  ##bench="1.0.4",
   tidyr="1.0.0",
   reshape2="1.4.3",
-  cdata="1.1.2",
+  ##cdata="1.1.2",
   microbenchmark="1.4.6",
   ggplot2="3.2.0")

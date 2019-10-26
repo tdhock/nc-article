@@ -22,12 +22,59 @@ iris.timings <- rbind(
 
 fwrite(iris.timings, "figure-iris-cols.csv")
 
+iris.timings <- fread("figure-iris-cols.csv")
+
 iris.timings[, seconds := time/1e9]
 stats.timings <- iris.timings[, .(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
 ), by=.(`capture groups`, `type conversions`, N.col, expr)]
+
+stats.timings[N.col>4000, {
+  fit <- lm(log10(median) ~ log10(N.col))
+  w <- coef(fit)
+  data.table(intercept=w[1], slope=w[2])
+}, by=.(`type conversions`, expr)][order(slope)]
+
+## Figure out where the two curves in the bottom panel intersect,
+## approximately.
+only.convert <- stats.timings[`type conversions` == 1]
+wide.convert <- data.table::dcast(only.convert, N.col ~ expr, value.var="median")
+wide.convert[, log10.cols := log10(N.col)]
+wide.convert[, diff.log10.seconds := log10(`nc::capture_melt_multiple`) - log10(`tidyr::pivot_longer`)]
+cross.log10.seconds <- wide.convert[, approx(
+  log10.cols, diff.log10.seconds, seq(1, 5, l=100)
+)][which.min(abs(y)), x]
+cross.dt <- only.convert[, approx(
+  log10(N.col), log10(median), cross.log10.seconds
+), by=.(`capture groups`, `type conversions`, expr)]
+cross.dt[, seconds := 10^y]
+cross.dt[, N.col := 10^x]
+
+cross.1 <- cross.dt[1]
+
+lm.input <- only.convert[N.col > cross.1$N.col]
+lm.input[, {
+  fit <- lm(log10(median) ~ log10(N.col))
+  w <- coef(fit)
+  data.table(intercept=w[1], slope=w[2])
+}, by=expr]
+## linear model is intercept + slope * log10(median) = log10(seconds)
+## 10^intercept * median^slope = seconds
+
+## want: min_f \sum_i [ f(x_i) - y_i ]^2 such that f(x) = a x^j + b.
+lm.dt <- lm.input[, {
+  j <- if(expr=="tidyr::pivot_longer")2 else 1
+  x.to.j <- N.col^j
+  fit <- lm(median ~ x.to.j)
+  w <- coef(fit)
+  data.table(b=w[1], a=w[2], j)
+}, by=expr]
+
+join.dt <- lm.dt[lm.input, on=.(expr)]
+join.dt[, x.to.j := N.col^j]
+join.dt[, pred.seconds := a * x.to.j + b]
 
 ref.dt <- data.table(
   seconds=c(60, 1),
@@ -60,6 +107,14 @@ gg <- ggplot()+
     N.col, ymin=q25, ymax=q75, fill=expr),
     alpha=0.2,
     data=stats.timings)+
+  ## geom_line(aes(
+  ##   N.col, pred.seconds, color=expr),
+  ##   linetype="dashed",
+  ##   data=join.dt)+
+  ## geom_point(aes(
+  ##   N.col, seconds, color=expr),
+  ##   shape=1,
+  ##   data=cross.dt)+
   scale_x_log10(
     "Number of cols in wide input data table",
     limits=c(NA, max(stats.timings$N.col)*20))+
