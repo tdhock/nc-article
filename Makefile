@@ -1,6 +1,6 @@
 submission.zip: RJwrapper.pdf
 	mkdir -p submission
-	cp hocking.bib hocking-edited.R hocking-edited.tex Makefile RJwrapper.pdf RJwrapper.tex submission
+	cp hocking.bib letter-to-editor.pdf hocking-edited.R hocking-edited.tex Makefile RJwrapper.pdf RJwrapper.tex figure-*.R figure-*.rds submission 
 	zip submission submission/* 
 RJwrapper.pdf: hocking-edited.tex hocking.bib figure-1-iris.pdf figure-who-both-cols.png figure-who-both-rows.png figure-iris-cols.png figure-iris-rows.png
 	R -e "tools::texi2pdf('RJwrapper.tex')"
