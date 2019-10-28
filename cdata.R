@@ -13,5 +13,7 @@ controlTable.args <- c(list(
   dim=sub(".Sepal.", "", part.list$Sepal, fixed=TRUE)),
   part.list)
 controlTable <- do.call(data.frame, controlTable.args)
-result <- cdata::rowrecs_to_blocks(
-  some.iris, controlTable=controlTable, columnsToCopy="X0.Species")
+system.time({
+  result <- cdata::rowrecs_to_blocks(
+    some.iris, controlTable=controlTable, columnsToCopy="X0.Species")
+})
