@@ -71,3 +71,5 @@ for(N.rep in N.rep.vec){
 
 timing.dt <- do.call(rbind, timing.dt.list)
 saveRDS(timing.dt, "figure-iris-cols-data.rds")
+
+

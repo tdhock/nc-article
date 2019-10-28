@@ -31,6 +31,13 @@ least 10,000 input reshape columns.
 
 [[file:figure-iris-cols.png]]
 
+In contrast everything appears to be linear in the number of input
+columns when the output has only a single reshape column:
+
+[[file:figure-who-cols-minimal.png]]
+
+source: [[file:figure-who-cols-minimal.R][figure]], [[file:figure-who-cols-minimal-data.R][timings]].
+
 ** 25 Oct 2019
 
 [[file:figure-who-both-rows.R]] makes

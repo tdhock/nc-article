@@ -19,6 +19,10 @@ figure-iris-cols.png: figure-iris-cols.R figure-iris-cols-data.rds figure-iris-c
 	R --vanilla < $<
 figure-iris-cols-data.rds: figure-iris-cols-data.R
 	R --vanilla < $<
+figure-iris-cols-minimal.png: figure-iris-cols-minimal.R figure-iris-cols-minimal-data.rds figure-iris-cols-minimal-convert-data.rds
+	R --vanilla < $<
+figure-iris-cols-minimal-data.rds: figure-iris-cols-minimal-data.R
+	R --vanilla < $<
 figure-iris-cols-convert-data.rds: figure-iris-cols-convert-data.R
 	R --vanilla < $<
 
