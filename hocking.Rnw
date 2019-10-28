@@ -521,7 +521,7 @@ the convenient data table syntax. Finally, we showed two examples of
 using \code{nc::field} to define patterns that match/capture
 fields of the form \code{variable = value}.
 
-\subsection{Wide-to-tall data reshaping}
+\subsection{New \pkg{nc} functions for wide-to-tall data reshaping}
 
 In this section we show how new \pkg{nc} functions can be used to
 reshape wide data (with many columns) to tall data (with fewer
@@ -534,7 +534,10 @@ part and column facets for measurement dimension. Our desired output
 therefore needs a single column with all of the reshaped numeric data
 to plot (Figure~\ref{fig:wide-to-tall}, W$\rightarrow$S). We can
 perform this operation using \code{nc::capture\_melt\_single}, which
-inputs a data frame and a pattern describing the columns to melt:
+inputs a data frame and a pattern which should match the names of the
+input columns to reshape. Any input columns with names that do not
+match the pattern are considered copy columns; the output also
+contains a capture column for each group specified in the pattern:
 
 <<irisSingle>>= 
 (iris.tall.single <- nc::capture_melt_single(
@@ -563,20 +566,20 @@ data table with two reshape output columns: a \code{Sepal} column to
 plot against a \code{Petal} column (Figure~\ref{fig:wide-to-tall},
 W$\rightarrow$M1). We can perform this operation using another
 function, \code{nc::capture\_melt\_multiple}, which inputs a data
-frame and a pattern which must contain the \code{column} group
-and one other named group:
+frame and a pattern which must contain the special \code{column} group
+and at least one other named group:
 
 <<irisMultiple>>= 
 (iris.parts <- nc::capture_melt_multiple(
   iris, column = ".*", "[.]", dim = ".*"))
 @
 
-The output above consists of one copy column (\code{Species}), one
-capture column (\code{dim}), and two reshape columns (\code{Petal},
-\code{Sepal}). Note that each unique value captured in the special
-\code{column} group becomes an output reshape column
-name. These data can be used to create the scatterplot using
-\pkg{ggplot2} via:
+Again, any input columns with names that do not match the pattern are
+considered copy columns (\code{Species}). Each unique value captured
+in the special \code{column} group becomes the name of an output
+reshape column (\code{Petal}, \code{Sepal}); other groups are used to
+create output capture columns (\code{dim}). These data can
+be used to create the scatterplot using \pkg{ggplot2} via:
 
 <<scatter, fig = TRUE, height = 2, width = 5>>= 
 ggplot(iris.parts) + facet_grid(.~dim) +
@@ -598,14 +601,14 @@ output is multiple reshape columns with names defined by the values
 captured in the special \code{column} group. Values from other
 groups are stored in capture columns in the output. Both functions
 support output of numeric capture columns via user-specified type
-conversion functions.
+conversion functions, as we will see in the next section.
 
 \section{Comparison with other data reshaping packages}
 
 In this section we compare the new data reshaping functions in the
 \pkg{nc} package with similar functions in other packages. We aim to
-demonstrate that the new \pkg{nc} syntax is often more powerful and
-less repetitive.
+demonstrate that the new \pkg{nc} syntax is  more powerful and
+less repetitive, without sacrificing speed.
 
 \subsection{Advantages with respect to \pkg{tidyr}: pattern syntax and type conversion}
 
