@@ -610,7 +610,7 @@ In this section we compare the new data reshaping functions in the
 demonstrate that the new \pkg{nc} syntax is  more powerful and
 less repetitive, without sacrificing speed.
 
-\subsection{Advantages with respect to \pkg{tidyr}: pattern syntax and type conversion}
+\subsection{Comparison with \pkg{tidyr} for a single output reshape column}
 
 In terms of functionality for wide-to-tall data reshaping, the most
 similar package to \pkg{nc} is \pkg{tidyr}
@@ -734,7 +734,7 @@ near the corresponding sub-patterns. We have also shown that
 repetition is often necessary with \pkg{tidyr} (e.g. pattern, group
 names), whereas such repetition can be avoided by using \pkg{nc}.
 
-\subsection{Comparison with \pkg{data.table} and \code{stats::reshape}}
+\subsection{Comparison with \pkg{data.table} and \code{stats::reshape} for multiple reshape output columns}
 
 In this section we demonstrate the advantages of using \pkg{nc} over
 \pkg{data.table} (which is used to implement \pkg{nc}
