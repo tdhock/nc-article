@@ -1,7 +1,10 @@
-submission.zip: RJwrapper.pdf
+RJwrapper-reproduced.pdf: RJwrapper.pdf
 	mkdir -p submission
-	cp hocking.bib letter-to-editor.pdf hocking-edited.R hocking-edited.tex Makefile RJwrapper.pdf RJwrapper.tex figure-*.R figure-*.rds submission 
-	zip submission submission/* 
+	cp hocking.bib hocking.Rnw letter-to-editor.pdf hocking-edited.R hocking-edited.tex Makefile RJwrapper.pdf RJwrapper.tex *.R figure-*.rds figure-*.pdf submission
+	zip submission submission/*
+	rm -rf /tmp/submission* && cp submission.zip RJournal.sty /tmp
+	cd /tmp && unzip submission.zip && cp RJournal.sty submission && cd submission && make RJwrapper.pdf
+	cp /tmp/submission/RJwrapper.pdf RJwrapper-reproduced.pdf
 RJwrapper.pdf: hocking-edited.tex hocking.bib figure-1-iris.pdf figure-who-both-cols.png figure-who-both-rows.png figure-iris-cols.png figure-iris-rows.png
 	R -e "tools::texi2pdf('RJwrapper.tex')"
 hocking-edited.Rnw: hocking-remove-space.R hocking.Rnw 
