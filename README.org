@@ -20,7 +20,9 @@ Abstract: Regular expressions are powerful tools for extracting tables
 
 ** 28 Oct 2019
 
-[[file:figure-iris-cols.R]] makes a figure showing that wide-to-tall data
+[[file:figure-iris-cols.R]] makes a figure, 
+based on data computed by [[file:figure-iris-cols-data.R]],
+which shows that wide-to-tall data
 reshaping using either data.table or nc packages is much faster than
 other packages (cdata, stats, tidyr). This experiment uses inputs with
 a fixed number of rows, and a variable number of input reshape
