@@ -1,18 +1,20 @@
-RJwrapper.pdf: hocking-edited.tex hocking.bib figure-1-iris.pdf figure-who-both-cols.png figure-who-both-rows.png figure-iris-cols.png figure-iris-rows.png
+RJwrapper.pdf: hocking.tex hocking.bib figure-1-iris.pdf figure-who-both-cols.png figure-who-both-rows.png figure-iris-cols.png figure-iris-rows.png
 	R -e "tools::texi2pdf('RJwrapper.tex')"
 RJwrapper-reproduced.pdf: RJwrapper.pdf
 	mkdir -p submission
-	cp hocking.bib hocking.Rnw letter-to-editor.pdf hocking-edited.R hocking-edited.tex Makefile RJwrapper.pdf RJwrapper.tex *.R figure-*.rds figure-*.pdf submission
+	cp hocking.bib hocking.Rnw hocking.tex letter-to-editor.pdf Makefile RJwrapper.pdf RJwrapper.tex *.R figure-*.rds figure-*.pdf submission
+	rm -f submission.zip
 	zip submission submission/*
 	rm -rf /tmp/submission* && cp submission.zip RJournal.sty /tmp
-	cd /tmp && unzip submission.zip && cp RJournal.sty submission && cd submission && make RJwrapper.pdf
+	cd /tmp && unzip submission.zip && cp RJournal.sty submission && cd submission && touch hocking.Rnw && make RJwrapper.pdf
 	cp /tmp/submission/RJwrapper.pdf RJwrapper-reproduced.pdf
-hocking-edited.Rnw: hocking-remove-space.R hocking.Rnw 
-	R --vanilla < $<
-hocking-edited.tex: hocking-edited.Rnw
-	R CMD Stangle $<
-	R CMD Sweave $<
-
+hocking-edited.Rnw: hocking-remove-space.R hocking.Rnw
+	R --vanilla < hocking-remove-space.R
+hocking.tex: hocking-edited.Rnw 
+	R CMD Stangle hocking-edited.Rnw
+	R CMD Sweave hocking-edited.Rnw
+	mv hocking-edited.R hocking.R
+	mv hocking-edited.tex hocking.tex
 figure-iris-cols.png: figure-iris-cols.R figure-iris-cols-data.rds figure-iris-cols-convert-data.rds
 	R --vanilla < $<
 figure-iris-cols-data.rds: figure-iris-cols-data.R
