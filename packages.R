@@ -67,6 +67,7 @@ works_with_R(
   "3.6.0",
   directlabels="2018.5.22",
   data.table="1.12.2",
+  bit64="0.9.8",
   "tdhock/nc@4993b2e0865c4b71771c810b85e0d9718757b763",
   ##bench="1.0.4",
   tidyr="1.0.0",

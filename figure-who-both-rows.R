@@ -55,8 +55,8 @@ gg <- ggplot()+
     limits=c(NA, max(stats.timings$N.rows)*20))+
   scale_y_log10(
     "Computation time (seconds)",
-    breaks=10^seq(-3, 1, by=1),
-    limits=c(NA, 10))
+    breaks=10^seq(-3, 2, by=1),
+    limits=c(NA, 11))
 dl <- directlabels::direct.label(gg, list(cex=0.75, "last.polygons"))
 
 pdf("figure-who-both-rows.pdf", 7, 3)

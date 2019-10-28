@@ -30,6 +30,12 @@ stats.timings <- iris.timings[, .(
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
 ), by=.(`capture groups`, `type conversions`, N.col, expr)]
+stats.timings[, minutes := median/60]
+stats.timings[
+, .SD[N.col==max(N.col), .(
+  N.col, pkg=sub("::.*", "", expr), median, minutes)][order(-minutes)],
+  by=`type conversions`]
+
 
 stats.timings[N.col>4000, {
   fit <- lm(log10(median) ~ log10(N.col))
@@ -77,8 +83,8 @@ join.dt[, x.to.j := N.col^j]
 join.dt[, pred.seconds := a * x.to.j + b]
 
 ref.dt <- data.table(
-  seconds=c(60, 1),
-  unit=c("minute", "second"))
+  seconds=c(60*60, 60, 1),
+  unit=c("hour", "minute", "second"))
 
 gg <- ggplot()+
   ggtitle("Multiple reshape output columns, variable number of input columns")+
@@ -91,7 +97,8 @@ gg <- ggplot()+
     data=ref.dt,
     color="grey",
     hjust=0,
-    vjust=-0.5)+
+    size=3,
+    vjust=1.2)+
   theme_bw()+
   theme(panel.spacing=grid::unit(0, "lines"))+
   scale_color_manual(values=pkg.color)+
