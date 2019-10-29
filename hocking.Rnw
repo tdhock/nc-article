@@ -33,11 +33,15 @@
 Regular expressions are powerful tools for text processing that are
 available in many programming languages, including R. A regular
 expression \dfn{pattern} defines a set of \dfn{matches} in a
-\dfn{subject} string. For example, the pattern \code{.*[.].*} matches
-zero or more non-newline characters, followed by a period, followed by
-zero or more non-newline characters. It would match the subjects
-\code{Sepal.Length} and \code{Petal.Width}, but it would not match in
-the subject \code{Species}.
+\dfn{subject} string. For example, consider as subjects the column
+names of the famous iris data set in R, \code{Sepal.Length}
+\code{Petal.Width}, \code{Species}, etc. The pattern \code{.*[.].*}
+matches zero or more non-newline characters, followed by a period,
+followed by zero or more non-newline characters. It would match
+\code{Sepal.Length} and
+\code{Petal.Width} but it
+would not match \code{Species}.
+
 
 The focus of this article is patterns with capture groups, which are
 typically defined using parentheses. For example, the pattern
@@ -46,7 +50,7 @@ previous paragraph, and it additionally allows the user to capture and
 extract the substrings by group index (e.g. group 1 matches
 \code{Sepal}, group 2 matches \code{Length}).
 
-Named capture groups allow extracting the a substring by name rather
+Named capture groups allow extracting the substring by name rather
 than by index. Using names rather than indices is useful in order to
 create more readable regular expressions (names document the purpose
 of each sub-pattern), and to create more readable \R\ code (it is
@@ -407,7 +411,7 @@ In the previous section we mentioned that every \pkg{nc} matching
 function outputs a data table, which can be
 queried/summarized/joined/etc using the convenient syntax of the
 \pkg{data.table} package. In this section we show an example of how
-this syntax makes is easy to parse non-tabular text output files from
+this syntax makes it easy to parse non-tabular text output files from
 a bioinformatics program.  We also show an example of how the new
 \code{nc::field} function can be used to avoid repetition when
 defining a pattern to match fields of the form \code{variable = value}.
@@ -777,11 +781,11 @@ melt(TC, measure.vars = patterns(age = "age", gender = "gender"))
 
 First, note that the syntax above requires repetition of \code{age}
 and \code{gender} (in names and in pattern strings). Also it is clear
-that the result is incorrect!  Actually, \code{patterns} is working as
-documented; it ``returns the matching indices'' of the provided
-regex. However, since the input columns are not sorted in regular
-order, \code{melt} returns an incorrect result. To get a correct
-result, we can provide a list of index vectors:
+that the result is incorrect!  Actually, the \code{patterns} function
+is working as documented; it ``returns the matching indices'' of the
+provided regex. However, since the input columns are not sorted in
+regular order, \code{melt} returns an incorrect result. To get a
+correct result, we can provide a list of index vectors:
 
 <<oo>>= 
 melt(TC, measure.vars = list(age = c(1,4), gender = c(3,2)))
@@ -1132,6 +1136,9 @@ using regular expressions.
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from
 \url{https://github.com/tdhock/nc-article}
+
+\paragraph{Acknowledgements.} Thanks to Marc Tollis for providing the
+example data output from the SweeD program.
 
 \begin{figure}
   \centering 
