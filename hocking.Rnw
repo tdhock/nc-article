@@ -1133,12 +1133,12 @@ future work, we will be interested to explore other operations related to
 machine learning and data visualization which could be simplified
 using regular expressions.
 
+\paragraph{Acknowledgements.} Thanks to Marc Tollis for providing the
+example data output from the SweeD program.
+
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from
 \url{https://github.com/tdhock/nc-article}
-
-\paragraph{Acknowledgements.} Thanks to Marc Tollis for providing the
-example data output from the SweeD program.
 
 \begin{figure}
   \centering 
