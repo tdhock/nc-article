@@ -15,6 +15,10 @@ hocking.tex: hocking-edited.Rnw
 	R CMD Sweave hocking-edited.Rnw
 	mv hocking-edited.R hocking.R
 	mv hocking-edited.tex hocking.tex
+figure-iris-cols-new.png: figure-iris-cols-new.R figure-iris-cols-new-data.rds figure-iris-cols-new-convert-data.rds
+	R --vanilla < $<
+figure-iris-cols-new-data.rds: figure-iris-cols-new-data.R
+	R --vanilla < $<
 figure-iris-cols.png: figure-iris-cols.R figure-iris-cols-data.rds figure-iris-cols-convert-data.rds
 	R --vanilla < $<
 figure-iris-cols-data.rds: figure-iris-cols-data.R

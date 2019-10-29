@@ -18,6 +18,12 @@ Abstract: Regular expressions are powerful tools for extracting tables
 - Main input/source file to edit is [[file:hocking.Rnw]] 
 - [[file:Makefile]] takes care of creating [[file:submission.zip]]
 
+** 29 Oct 2019
+[[file:figure-iris-cols-new.R]] makes a new figure based on [[file:figure-iris-cols-new-data.R][timings]]
+computed using updated R packages.
+
+[[file:figure-iris-cols-new.png]]
+
 ** 28 Oct 2019
 
 [[file:figure-iris-cols.R]] makes a figure, 
