@@ -740,12 +740,12 @@ do not require special logic (e.g. \code{ymin} above) can be specified
 as prototypes using the \code{names\_ptypes} argument (but specifying
 \code{ymax = numeric()} as a prototype results in a lossy cast error).
 
-To conclude this comparison, we have seen that defining a complex
-pattern is much more readable/composable using \pkg{nc} syntax,
-because it keeps group-specific names and type conversion functions
-near the corresponding sub-patterns. We have also shown that
-repetition is often necessary with \pkg{tidyr} (e.g. pattern, group
-names), whereas such repetition can be avoided by using \pkg{nc}.
+To conclude this comparison, we have seen that \pkg{nc} syntax makes
+it easy to read and write complex patterns, because it keeps
+group-specific names and type conversion functions near the
+corresponding sub-patterns. We have also shown that repetition is
+often necessary with \pkg{tidyr} (e.g. pattern, group names), whereas
+such repetition can be avoided by using \pkg{nc}.
 
 \subsection{Comparison with \pkg{data.table} and \code{stats::reshape} for multiple reshape output columns}
 
@@ -793,7 +793,8 @@ and \code{gender} (in names and in pattern strings). Also it is clear
 that the result is incorrect!  Actually, the \code{patterns} function
 is working as documented; it ``returns the matching indices'' of the
 provided regex. However, since the input columns are not sorted in
-regular order, \code{melt} returns an incorrect result. To get a
+regular order, \code{melt} returns an incorrect result (this is an
+incorrect use of these functions, not a bug). To get a
 correct result, we can provide a list of index vectors:
 
 <<oo>>= 
