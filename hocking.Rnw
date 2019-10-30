@@ -33,15 +33,18 @@
 Regular expressions are powerful tools for text processing that are
 available in many programming languages, including R. A regular
 expression \dfn{pattern} defines a set of \dfn{matches} in a
-\dfn{subject} string. For example, consider as subjects the column
-names of the famous iris data set in R, \code{Sepal.Length}
-\code{Petal.Width}, \code{Species}, etc. The pattern \code{.*[.].*}
-matches zero or more non-newline characters, followed by a period,
-followed by zero or more non-newline characters. It would match
-\code{Sepal.Length} and
-\code{Petal.Width} but it
-would not match \code{Species}.
-
+\dfn{subject} string. For some example subjects, consider the column
+names of the famous iris data set in R: \code{Species},
+\code{Sepal.Length}, \code{Petal.Width}, etc. Some example patterns: a
+dot between square brackets \code{[.]} matches a period, a dot by
+itself \code{.} matches any non-newline character, and a dot followed
+by a star \code{.*} matches zero or more non-newline
+characters. Therefore the pattern \code{.*[.].*} matches zero or more
+non-newline characters, followed by a period, followed by zero or more
+non-newline characters. It would match \code{Sepal.Length} and
+\code{Petal.Width} but it would not match \code{Species}. For a more
+detailed discussion of regular expression patterns, we refer the
+reader to \code{help(regex)} in R or the book of \citet{Friedl2002}.
 
 The focus of this article is patterns with capture groups, which are
 typically defined using parentheses. For example, the pattern
@@ -51,7 +54,7 @@ extract the substrings by group index (e.g. group 1 matches
 \code{Sepal}, group 2 matches \code{Length}).
 
 Named capture groups allow extracting the substring by name rather
-than by index. Using names rather than indices is useful in order to
+than by index. Using names rather than indices is preferable in order to
 create more readable regular expressions (names document the purpose
 of each sub-pattern), and to create more readable \R\ code (it is
 easier to understand the intent of named references than numbered
