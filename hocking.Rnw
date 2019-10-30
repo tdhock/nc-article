@@ -684,17 +684,18 @@ tidyr::pivot_longer(                                          #L3
 
 In the code above we first define a sub-pattern variable for the
 \code{diagnosis} and \code{gender} capture groups, as we did using
-\pkg{nc}. One difference is that the \pkg{tidyr} pattern is a string
-literal with un-named capture groups, whereas the \pkg{nc} pattern is
-a list which includes capture group names as well as type conversion
-functions. These three parameters are specified as three separate
-arguments in \pkg{tidyr}, which results in some separation (e.g. group
-names defined on L5 but sub-patterns are defined on L1) and repetition
-(e.g. gender appears on L5 and L6) in the code. The pattern also must
-be repeated: first in the \code{cols} argument (L4) to specify the set
-of input reshape columns, second in the \code{names\_pattern} argument
-(L7) to specify the conversion from input reshape column names to
-output capture column values.
+\pkg{nc}. One difference is that the \pkg{tidyr} sub-pattern variable
+is a string with un-named capture groups, whereas the \pkg{nc}
+sub-pattern variable
+is a list which includes capture group names as well as a type
+conversion function. These three parameters are specified as three
+separate arguments in \pkg{tidyr}, which results in some separation
+(e.g. group names defined on L5 but corresponding sub-patterns defined on L1)
+and repetition (e.g. \code{gender} appears on L5 and L6) in the code. The
+pattern also must be repeated: first in the \code{cols} argument (L4)
+to specify the set of input reshape columns, second in the
+\code{names\_pattern} argument (L7) to specify the conversion from
+input reshape column names to output capture column values.
 
 Now suppose we want to extract two numeric columns from \code{ages},
 for example to use as interval-censored outputs in a survival
@@ -740,7 +741,7 @@ as prototypes using the \code{names\_ptypes} argument (but specifying
 \code{ymax = numeric()} as a prototype results in a lossy cast error).
 
 To conclude this comparison, we have seen that defining a complex
-pattern is much more readable/understandable using \pkg{nc} syntax,
+pattern is much more readable/composable using \pkg{nc} syntax,
 because it keeps group-specific names and type conversion functions
 near the corresponding sub-patterns. We have also shown that
 repetition is often necessary with \pkg{tidyr} (e.g. pattern, group
