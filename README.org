@@ -18,6 +18,10 @@ Abstract: Regular expressions are powerful tools for extracting tables
 - Main input/source file to edit is [[file:hocking.Rnw]] 
 - [[file:Makefile]] takes care of creating [[file:submission.zip]]
 
+** 17 May 2020
+
+maybe add comparison with [[https://github.com/TysonStanley/tidyfast/blob/master/R/pivot_longer.R][tidyfast::dt_pivot_longer]]?
+
 ** 29 Oct 2019
 [[file:figure-iris-cols-new.R]] makes a new figure based on [[file:figure-iris-cols-new-data.R][timings]]
 computed using updated R packages.
