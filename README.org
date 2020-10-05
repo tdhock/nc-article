@@ -20,6 +20,14 @@ Abstract: Regular expressions are powerful tools for extracting tables
 
 ** 5 Oct 2020
 
+[[file:figure-who-cols-dt-data.R]] computes timings,
+[[file:figure-who-cols-dt.R]] plots
+
+[[file:figure-who-cols-dt.png]]
+
+[[file:figure-iris-cols-dt-valgrind.R]] run under valgrind, no memory
+problems.
+
 [[file:figure-iris-cols-dt-data.R]] computes timings of new data table
 methods, [[file:figure-iris-cols-dt.R]] makes
 

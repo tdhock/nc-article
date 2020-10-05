@@ -25,7 +25,7 @@ do.sub <- function(...){
   L
 }
 
-N.rep.vec <- as.integer(10^seq(0, 3.5, by=0.5))
+N.rep.vec <- 1
 timing.dt.list <- list()
 for(N.rep in N.rep.vec){
   print(N.rep)
@@ -47,7 +47,7 @@ for(N.rep in N.rep.vec){
   }
   measure.vars <- structure(measure.list, variable_table=var.tab)
   m.args <- do.sub(
-    times=10,
+    times=1,
     "tidyr::pivot_longer"={
       tidyr::pivot_longer(
         some.iris,
@@ -105,7 +105,6 @@ for(N.rep in N.rep.vec){
 }
 
 timing.dt <- do.call(rbind, timing.dt.list)
-fwrite(timing.dt, "figure-iris-cols-dt-data.csv")
-
+saveRDS(timing.dt, "figure-iris-cols-dt-data.rds")
 
 

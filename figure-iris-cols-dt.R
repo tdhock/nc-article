@@ -9,12 +9,8 @@ pkg.color <- c("tidyr::pivot_longer"="black",
   "#B2DF8A", "#33A02C", #green
   "data.table::melt.old.set"="#FB9A99", "data.table::melt.old.join"="#E31A1C", #red
   "#FDBF6F", "#FF7F00", #orange
-  "#CAB2D6", "#6A3D9A", #purple
+  "#CAB2D6", "data.table::melt.new.var_tab"="#6A3D9A", #purple
   "#FFFF99", "#B15928") #yellow/brown
-
-iris.timings <- readRDS("figure-iris-cols-dt-data.rds")
-fwrite(iris.timings, "figure-iris-cols-dt-data.csv")
-iris.timings <- fread("figure-iris-cols-dt-data.csv")
 
 iris.timings[, seconds := time/1e9]
 stats.timings <- iris.timings[, .(
