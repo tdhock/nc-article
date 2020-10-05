@@ -67,14 +67,16 @@ works_with_R(
   "3.6.1",
   wrapr="1.9.2",
   rquery="1.3.9",
+  "Rdatatable/data.table@c02fa9e8e6016986bbad3113c149d68104d70bff",
   rqdatatable="1.2.3",
   ## below updated
-  "r-lib/vctrs@ce4aa0f37b02cf4484d5e5a585f5c4326676fc58",
-  "tidyverse/tidyselect@b450588248bb30a3305d691fa213d875f451ab01",
-  "WinVector/cdata@7208011c5566be399694ccefbece0cf203ed7d39",#1.1.3
+  ## "r-lib/vctrs@ce4aa0f37b02cf4484d5e5a585f5c4326676fc58",
+  ## "tidyverse/tidyselect@b450588248bb30a3305d691fa213d875f451ab01",
+  ## "WinVector/cdata@7208011c5566be399694ccefbece0cf203ed7d39",#1.1.3
+  cdata="1.0",
   ## packages above have been updated based on the issues I posted.
   directlabels="2018.5.22",
-  data.table="1.12.6",
+  ##data.table="1.12.6",
   bit64="0.9.8",
   microbenchmark="1.4.7",
   ggplot2="3.2.1",
