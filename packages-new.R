@@ -75,7 +75,7 @@ works_with_R(
   ## "WinVector/cdata@7208011c5566be399694ccefbece0cf203ed7d39",#1.1.3
   cdata="1.0",
   ## packages above have been updated based on the issues I posted.
-  directlabels="2018.5.22",
+  "tdhock/directlabels@f690edf6db2790960aa00ca388b7e11da74bf783",
   ##data.table="1.12.6",
   bit64="0.9.8",
   microbenchmark="1.4.7",

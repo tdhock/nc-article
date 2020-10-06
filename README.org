@@ -20,6 +20,11 @@ Abstract: Regular expressions are powerful tools for extracting tables
 
 ** 5 Oct 2020
 
+[[file:figure-who-rows-dt-data.R]] and [[file:figure-iris-rows-dt-data.R]]
+compute timings, [[file:figure-who-rows-dt.R]] plots
+
+[[file:figure-who-rows-dt.png]]
+
 [[file:figure-who-cols-dt-data.R]] computes timings,
 [[file:figure-who-cols-dt.R]] plots
 

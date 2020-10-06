@@ -1,13 +1,13 @@
 source("packages-new.R")
 
 data.vec <- list(who="single (1)", iris="multiple (2)")
-Nrow.vec <- c(who=11, iris=150)
+Ncol.vec <- c(who=56, iris="4 total (2 per output value column)")
 timings.dt.list <- list()
 for(data.name in names(data.vec)){
   output.value.columns <- data.vec[[data.name]]
-  data.timings <- fread(paste0("figure-", data.name, "-cols-dt-data.csv"))
+  data.timings <- fread(paste0("figure-", data.name, "-rows-dt-data.csv"))
   timings.dt.list[[data.name]] <- data.table(
-    data.name, input.rows=Nrow.vec[[data.name]],
+    data.name, input.measure.columns=Ncol.vec[[data.name]],
     output.value.columns, data.timings)
 }
 timings.dt <- do.call(rbind, timings.dt.list)
@@ -17,13 +17,13 @@ stats.timings <- timings.dt[, .(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
-), by=.(data.name, input.rows, output.value.columns, N.col, expr)]
+), by=.(input.measure.columns, data.name, output.value.columns, N.rows, expr)]
 
 ref.dt <- data.table(
   seconds=c(60*60, 60, 1),
   unit=c("hour", "minute", "second"))[unit=="second"]
 gg <- ggplot()+
-  ggtitle("Variable number of input columns")+
+  ggtitle("Variable number of input rows")+
   geom_hline(aes(
     yintercept=seconds),
     color="grey",
@@ -40,25 +40,25 @@ gg <- ggplot()+
   ## scale_color_manual(values=pkg.color)+
   ## scale_fill_manual(values=pkg.color)+
   geom_line(aes(
-    N.col, median, color=expr),
+    N.rows, median, color=expr),
     data=stats.timings)+
   geom_ribbon(aes(
-    N.col, ymin=q25, ymax=q75, fill=expr),
+    N.rows, ymin=q25, ymax=q75, fill=expr),
     alpha=0.2,
     data=stats.timings)+
   scale_x_log10(
-    "Number of cols in wide input data table",
-    limits=c(NA, max(stats.timings$N.col)*300))+
+    "Number of rows in wide input data table",
+    limits=c(NA, max(stats.timings$N.rows)*300))+
   scale_y_log10(
     "Computation time (seconds)")+
   facet_grid(
-    . ~ data.name + input.rows + output.value.columns,
+    . ~ data.name + input.measure.columns + output.value.columns,
     labeller=label_both)
 dl <- directlabels::direct.label(gg, list(cex=0.75, "last.polygons"))
-pdf("figure-who-cols-dt.pdf", 9, 4)
+pdf("figure-who-rows-dt.pdf", 9, 4)
 print(dl)
 dev.off()
-png("figure-who-cols-dt.png", 9, 4, units="in", res=100)
+png("figure-who-rows-dt.png", 9, 4, units="in", res=100)
 print(dl)
 dev.off()
 
