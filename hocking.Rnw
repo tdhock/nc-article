@@ -201,7 +201,8 @@ explained in detail below:
   \begin{tabular}{llllllll}
 \toprule
 \code{pkg::function} & single & multiple & regex & na.rm & types & list \\
-\midrule
+    \midrule
+\code{tidyfast::dt\_pivot\_longer} & yes & no & no & yes & no & yes \\
 \code{nc::capture\_melt\_multiple} & no & unsorted & capture & yes & any & yes\\
 \code{nc::capture\_melt\_single} & yes & no & capture & yes & any & yes\\
 \code{tidyr::pivot\_longer} & yes & unsorted & capture & yes & some & yes\\

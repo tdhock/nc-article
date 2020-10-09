@@ -9,15 +9,12 @@ pkg.color <- c(
   "cdata::rowrecs_to_blocks"="#E7298A",
   "nc::capture_melt_multiple"="#66A61E",
   "stats::reshape"="#E6AB02",
-  "utils::stack"="#E6AB02",
-  "#A6761D", "#666666")
+  "utils::stack"="#E6AB02")
+  #"#A6761D", "#666666")
 
-iris.timings <- readRDS("figure-iris-cols-new-data.rds")
-fwrite(iris.timings, "figure-iris-cols-new-data.csv")
 iris.timings <- fread("figure-iris-cols-new-data.csv")
-
 iris.timings[, seconds := time/1e9]
-stats.timings <- iris.timings[, .(
+stats.timings <- iris.timings[expr %in% names(pkg.color), .(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
@@ -37,8 +34,7 @@ stats.timings[N.col>4000, {
 
 ref.dt <- data.table(
   seconds=c(60*60, 60, 1),
-  unit=c("hour", "minute", "second"))
-
+  unit=c("hour", "minute", "second"))[unit=="second"]
 gg <- ggplot()+
   ggtitle("Multiple reshape output columns, variable number of input columns")+
   geom_hline(aes(
