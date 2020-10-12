@@ -18,6 +18,13 @@ Abstract: Regular expressions are powerful tools for extracting tables
 - Main input/source file to edit is [[file:hocking.Rnw]] 
 - [[file:Makefile]] takes care of creating [[file:submission.zip]]
 
+** 11 Oct 2020
+
+[[file:figure-who-cols-new-data.R]] runs new timings and
+[[file:figure-who-cols-new.R]] makes new figure:
+
+[[file:figure-who-cols-new.png]]
+
 ** 5 Oct 2020
 
 [[file:figure-who-rows-dt-data.R]] and [[file:figure-iris-rows-dt-data.R]]

@@ -41,12 +41,12 @@ for(N.rep in N.rep.vec){
       nc::capture_melt_multiple(
         some.iris, iris.pattern.nc)
     },
-    ## "nc::measure"={
+    ## "nc::measure"={#works, same speed as capture_melt_multiple
     ##   data.table::melt(
     ##     some.iris,
     ##     measure=nc:::measure(iris.pattern.nc))
     ## },
-    ## "tidyfast::dt_pivot_longer"={
+    ## "tidyfast::dt_pivot_longer"={#does not work.
     ##   tidyfast::dt_pivot_longer(
     ##     some.iris,
     ##     grep(iris.pattern.args$pattern, names(some.iris)),
@@ -60,7 +60,7 @@ for(N.rep in N.rep.vec){
         names_transform=iris.pattern.args$fun.list,
         names_pattern=iris.pattern.args$pattern)
     },
-    ## "data.table::melt.patterns"={
+    ## "data.table::melt.patterns"={#works, slower than other data.table
     ##   data.table::melt(
     ##     some.iris,
     ##     measure.vars=patterns(Sepal="Sepal", Petal="Petal"))
@@ -70,22 +70,11 @@ for(N.rep in N.rep.vec){
         some.iris,
         measure=data.table:::measure(
           before=as.integer, value.name, dim, sep="."))
-    }
-  ), if(N.rep < 1e3)do.sub(
-    "stats::reshape"={
-      new.names <- sub("(.*?)[.](.*)", "\\2_\\1", names(some.iris))
-      transform(stats::reshape(
-        structure(some.iris, names=new.names),
-        direction="long",
-        varying=1:(ncol(some.iris)-1)),
-        dim=sub("_.*", "", time),
-        before=as.integer(sub(".*_", "", time)),
-        "0.Species"=Species_0)
-    }, 
+    },
     "cdata::rowrecs_to_blocks"={
       part.list <- list()
       for(part in c("Petal", "Sepal")){
-        part.list[[part]] <- grep(part, names(some.iris), value=TRUE)
+        part.list[[part]] <- grep(part, names(some.iris), value=TRUE) 
       }
       controlTable.args <- c(list(
         stringsAsFactors=FALSE,
@@ -99,6 +88,17 @@ for(N.rep in N.rep.vec){
         controlTableKeys=c("before.chr", "dim"))
       df$before <- as.integer(df$before.chr)
       df
+    }    
+  ), if(N.rep < 1e3)do.sub(
+    "stats::reshape"={
+      new.names <- sub("(.*?)[.](.*)", "\\2_\\1", names(some.iris))
+      transform(stats::reshape(
+        structure(some.iris, names=new.names),
+        direction="long",
+        varying=1:(ncol(some.iris)-1)),
+        dim=sub("_.*", "", time),
+        before=as.integer(sub(".*_", "", time)),
+        "0.Species"=Species_0)
     })
   )
   m.result <- do.call(microbenchmark, m.args)

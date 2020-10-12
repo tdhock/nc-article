@@ -34,8 +34,8 @@ stats.timings[N.col>4000, {
 
 ref.dt <- data.table(
   seconds=c(60*60, 60, 1),
-  unit=c("hour", "minute", "second"))[unit=="second"]
-gg <- ggplot()+
+  unit=c("hour", "minute", "second"))[unit!="hour"]
+dl <- ggplot()+
   ggtitle("Multiple reshape output columns, variable number of input columns")+
   geom_hline(aes(
     yintercept=seconds),
@@ -49,9 +49,21 @@ gg <- ggplot()+
     size=3,
     vjust=1.2)+
   theme_bw()+
-  theme(panel.spacing=grid::unit(0, "lines"))+
+  theme(
+    legend.position = "none",
+    panel.spacing=grid::unit(0, "lines"))+
   scale_color_manual(values=pkg.color)+
   scale_fill_manual(values=pkg.color)+
+  geom_dl(aes(
+    N.col, median, color=expr, label=expr),
+    data=stats.timings,
+    method=list(cex=0.75, "last.polygons"))+
+  geom_line(aes(
+    N.col, median, group=expr),
+    color="white",
+    alpha=0.5,
+    size=2,
+    data=stats.timings)+
   geom_line(aes(
     N.col, median, color=expr),
     data=stats.timings)+
@@ -64,7 +76,6 @@ gg <- ggplot()+
     limits=c(NA, max(stats.timings$N.col)*20))+
   scale_y_log10(
     "Computation time (seconds)")
-dl <- directlabels::direct.label(gg, list(cex=0.75, "last.polygons"))
 
 pdf("figure-iris-cols-new.pdf", 7, 3)
 print(dl)
