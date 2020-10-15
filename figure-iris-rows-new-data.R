@@ -1,12 +1,16 @@
 source("packages-new.R")
 iris.pattern.nc <- list(
-  before="[0-9]+", as.integer,
+  nc::field("day", "", "[0-9]+", as.integer),
   "[.]",
   column=".*",
   "[.]",
   dim=".*")
 iris.pattern.args <- nc::var_args_list(iris.pattern.nc)
-iris.reshape.cols <- iris[, 1:4]
+iris.reshape.rows <- iris[, 1:4]
+iris.days <- data.frame(
+  day1=iris.reshape.rows, day2=iris.reshape.rows, Species=iris$Species)
+names_to <- names(iris.pattern.args$fun.list)
+names_to[names_to=="column"] <- ".value"
 
 do.sub <- function(...){
   mcall <- match.call()
@@ -21,19 +25,14 @@ do.sub <- function(...){
   }
   L
 }
-
-names_to <- names(iris.pattern.args$fun.list)
-names_to[names_to=="column"] <- ".value"
-N.rep.vec <- as.integer(c(0, 10^seq(0, 4, by=0.5)))
 timing.dt.list <- list()
-for(N.rep in N.rep.vec){
-  print(N.rep)
-  i.vec <- 1:N.rep
-  L <- lapply(i.vec, function(i)iris.reshape.cols)
-  names(L) <- i.vec
-  L[["0"]] <- iris
-  some.iris <- do.call(data.table, L)
-  N.col <- ncol(some.iris)
+
+N.row.vec <- as.integer(10^seq(1, 6, by=0.5))
+N.row.new <- N.row.vec[! N.row.vec %in% names(timing.dt.list)]
+for(N.row in N.row.new){
+  print(N.row)
+  i.vec <- ((0:(N.row-1)) %% nrow(iris)) + 1
+  some.iris <- data.table(iris.days[i.vec,], obs=1:N.row)
   result.list <- list()
   m.args <- c(do.sub(
     times=10,
@@ -53,8 +52,10 @@ for(N.rep in N.rep.vec){
       data.table::melt(
         some.iris,
         measure=data.table:::measure(
-          before=as.integer, value.name, dim, sep="."))
-    },
+          day=as.integer, value.name, dim,
+          pattern=iris.pattern.args$pattern))
+    }
+  ), if(N.row < 1e6)do.sub(
     "cdata::rowrecs_to_blocks"={
       part.list <- list()
       for(part in c("Petal", "Sepal")){
@@ -62,32 +63,34 @@ for(N.rep in N.rep.vec){
       }
       controlTable.args <- c(list(
         stringsAsFactors=FALSE,
-        before.chr=sub("[.].*", "", part.list$Sepal),
+        day.chr=gsub("[^0-9]", "", part.list$Sepal),
         dim=sub(".*[.]", "", part.list$Sepal)),
         part.list)
       controlTable <- do.call(data.frame, controlTable.args)
       df <- cdata::rowrecs_to_blocks(
         some.iris, controlTable=controlTable,
-        columnsToCopy="0.Species",
-        controlTableKeys=c("before.chr", "dim"))
-      df$before <- as.integer(df$before.chr)
+        columnsToCopy=c("Species", "obs"),
+        controlTableKeys=c("day.chr", "dim"))
+      df$day <- as.integer(df$day.chr)
       df
-    }    
-  ), if(N.rep < 1e3)do.sub(
+    },
     "stats::reshape"={
-      new.names <- sub("(.*?)[.](.*)", "\\2_\\1", names(some.iris))
-      transform(stats::reshape(
-        structure(some.iris, names=new.names),
+      DF <- stats::reshape(
+        some.iris,
         direction="long",
-        varying=1:(ncol(some.iris)-1)),
-        dim=sub("_.*", "", time),
-        before=as.integer(sub(".*_", "", time)),
-        "0.Species"=Species_0)
+        v.names=c("Petal","Sepal"),
+        varying=list(
+          grep("Petal", names(some.iris)),
+          grep("Sepal", names(some.iris))))
+      Petal <- grep("Petal", names(some.iris), value=TRUE)
+      DF$day <- as.integer(gsub("[^0-9]", "", Petal))[DF$time]
+      DF$dim <- sub(".*[.]", "", Petal)[DF$time]
+      DF
     })
   )
   m.result <- do.call(microbenchmark, m.args)
   lapply(result.list, names)
-  timing.dt.list[[paste(N.rep)]] <- data.table(N.rep, N.col, m.result)
+  timing.dt.list[[paste(N.row)]] <- data.table(N.row, m.result)
   ref.name <- "data.table::melt"
   name.vec <- names(result.list[[ref.name]])
   ord.dt.list <- list()
@@ -105,7 +108,7 @@ for(N.rep in N.rep.vec){
 }
 
 timing.dt <- do.call(rbind, timing.dt.list)
-fwrite(timing.dt, "figure-iris-cols-new-data.csv")
+fwrite(timing.dt, "figure-iris-rows-new-data.csv")
 
 
 

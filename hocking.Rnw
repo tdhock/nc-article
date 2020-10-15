@@ -11,7 +11,7 @@
 \author{by Toby Dylan Hocking}
 
 <<li, echo=FALSE, results=hide>>=
-.libPaths("library")
+.libPaths("library-new")
 @ 
 
 \maketitle
@@ -50,7 +50,7 @@ The focus of this article is patterns with capture groups, which are
 typically defined using parentheses. For example, the pattern
 \code{(.*)[.](.*)} results in the same matches as the pattern in the
 previous paragraph, and it additionally allows the user to capture and
-extract the substrings by group index (e.g. group 1 matches
+extract the substrings by group index (e.g., group 1 matches
 \code{Sepal}, group 2 matches \code{Length}).
 
 Named capture groups allow extracting the substring by name rather
@@ -99,18 +99,18 @@ the different types of columns involved in this conversion:
 For example the wide iris data (W in Figure~\ref{fig:wide-to-tall})
 have four numeric columns to reshape: \code{Sepal.Length},
 \code{Sepal.Width}, \code{Petal.Length}, \code{Petal.Width}. For some
-purposes (e.g. displaying a histogram of each reshape input column
+purposes (e.g., displaying a histogram of each reshape input column
 using facets in \CRANpkg{ggplot2}) the desired reshaping operation
 results in a table with a single reshape output column (S in
 Figure~\ref{fig:wide-to-tall}), two copied columns, and two columns
 captured from the names of the reshaped input columns. For other
-purposes (e.g. scatterplot to compare sepal and petal sizes) the
+purposes (e.g., scatterplot to compare sepal and petal sizes) the
 desired reshaping operation results in a table with multiple reshape
 output columns (M1 with \code{Sepal} and \code{Petal} columns in
 Figure~\ref{fig:wide-to-tall}), two copied columns, and one column
 captured from the names of the reshaped input columns. We propose to
 use the new regular expression syntax of
-\citet{HOCKING2019-namedCapture}, e.g. \code{part = ".*",} \code{"[.]",}
+\citet{HOCKING2019-namedCapture}, e.g., \code{part = ".*",} \code{"[.]",}
 \code{dimension = ".*"}, to define both types of wide-to-tall data
 reshaping operations. In particular, we propose using a single
 capturing regular expression for defining both (1) the subset of
@@ -177,16 +177,16 @@ explained in detail below:
 \item[multiple] refers to support for converting input reshape columns of
   possibly different types to multiple output reshape columns; ``sorted''
   means that conversion works correctly only if the input reshape columns are sorted
-  in a regular order, e.g. \code{Sepal.Length}, \code{Sepal.Width},
+  in a regular order, e.g., \code{Sepal.Length}, \code{Sepal.Width},
   \code{Petal.Length}, \code{Petal.Width}; ``unsorted'' means that
   conversion works correctly even if the they are not sorted,
-  e.g. \code{Sepal.Length}, \code{Sepal.Width}, \code{Petal.Width},
+  e.g., \code{Sepal.Length}, \code{Sepal.Width}, \code{Petal.Width},
   \code{Petal.Length}.
 \item[regex] refers to support for regular expressions; ``match''
   means a pattern is used to match the input column names; ``capture''
   means that the specified pattern is used to
   create new output capture columns --- this is especially useful when the names
-  consist of several distinct pieces of information, e.g. \code{Sepal.Length};
+  consist of several distinct pieces of information, e.g., \code{Sepal.Length};
   ``no'' means that regular expressions are not directly supported
   (although \code{base::grep} can always be used).
 \item[na.rm] refers to support for removing missing values.
@@ -202,12 +202,12 @@ explained in detail below:
 \toprule
 \code{pkg::function} & single & multiple & regex & na.rm & types & list \\
     \midrule
-\code{tidyfast::dt\_pivot\_longer} & yes & no & no & yes & no & yes \\
 \code{nc::capture\_melt\_multiple} & no & unsorted & capture & yes & any & yes\\
 \code{nc::capture\_melt\_single} & yes & no & capture & yes & any & yes\\
-\code{tidyr::pivot\_longer} & yes & unsorted & capture & yes & some & yes\\
+\code{tidyr::pivot\_longer} & yes & unsorted & capture & yes & any & yes\\
+\code{data.table::melt}, \code{measure} & yes & unsorted & capture & yes & any & yes\\
 \code{stats::reshape} & yes & sorted & capture & no & some & no\\
-\code{data.table::melt}, \code{patterns} & yes & sorted & match & yes & no & yes\\
+\code{tidyfast::dt\_pivot\_longer} & yes & no & no & yes & no & yes \\
 \code{tidyr::gather} & yes & no & no & yes & some & yes\\
 \code{reshape2::melt} & yes & no & no & yes & no & no\\
 \code{cdata::rowrecs\_to\_blocks} & yes & unsorted & no & no &no & yes\\
@@ -236,7 +236,7 @@ features listed in Table~\ref{tab:features}, \code{utils::stack} only
 supports output with a single reshape column, whereas \code{stats::reshape} supports
 the following features. For data with regular input column names (output
 column, separator, time value), regular expressions can be used to
-specify the separator (e.g. in \code{Sepal.Length}, \code{Sepal} is
+specify the separator (e.g., in \code{Sepal.Length}, \code{Sepal} is
 output column, dot is separator, \code{Length} is time
 value). Multiple output columns are supported, but incorrect output
 may be computed if input columns are not sorted in a regular
@@ -265,7 +265,7 @@ specifying output capture columns
 \code{pivot\_longer}, via the \code{names\_ptypes} argument, which
 should be a list with names corresponding to output columns and values
 corresponding to prototypes (zero-length atomic vectors,
-e.g. \code{numeric()}). Both functions support list columns and
+e.g., \code{numeric()}). Both functions support list columns and
 removing missing values, although different arguments are used
 (\code{na.rm} for \code{gather}, \code{values\_drop\_na} for
 \code{pivot\_longer}).
@@ -339,9 +339,9 @@ constructed in R code that uses named arguments to indicate capturing
 sub-patterns, which are translated to un-named groups when passed to
 the regex engine. For example, consider a user who wants to capture
 the two pieces of the column names of the iris data,
-e.g. \code{Sepal.Length}. The user would typically specify the
+e.g., \code{Sepal.Length}. The user would typically specify the
 capturing regular expression as a string literal,
-e.g. \code{"(.*)[.](.*)"}.  Using \pkg{nc} the same pattern can be
+e.g., \code{"(.*)[.](.*)"}.  Using \pkg{nc} the same pattern can be
 applied to the iris data column names via
 
 <<capture-iris-cols>>= 
@@ -357,7 +357,7 @@ number of other arguments (\code{...}) which are used to define the
 regex pattern. In this case there are three pattern arguments:
 \code{part = ".*", "[.]", dim = ".*"}. Each named R argument in the
 pattern generates an un-named capture group by enclosing the specified
-character string in parentheses, e.g. \code{(.*)} for both \code{part}
+character string in parentheses, e.g., \code{(.*)} for both \code{part}
 and \code{dim} arguments above. All of the sub-patterns are pasted
 together in the sequence they appear in order to create the final
 pattern that is used with the specified regex engine. The
@@ -383,7 +383,7 @@ captured character strings. Group-specific type conversion functions
 are useful for converting captured text into numeric output columns
 \citep{HOCKING2019-namedCapture}. Note that the order of elements in
 \code{fun.list} corresponds to the order of capture groups in the
-pattern (e.g. first capture group named \code{part}, second
+pattern (e.g., first capture group named \code{part}, second
 \code{dim}). These data can be used with any regex engine that
 supports un-named capture groups (including ICU) in order to get a
 capture matrix with column names, e.g.
@@ -528,7 +528,7 @@ To conclude this section, we have shown that
 \code{nc::capture\_all\_str} inputs a multi-line text file subject,
 then outputs a data table with one row per match and one column per
 capture group. We have also shown how these data tables may be further
-processed (e.g. \code{fread}, \code{by = Alignment}) and joined using
+processed (e.g., \code{fread}, \code{by = Alignment}) and joined using
 the convenient data table syntax. Finally, we showed two examples of
 using \code{nc::field} to define patterns that match/capture
 fields of the form \code{variable = value}.
@@ -620,7 +620,7 @@ conversion functions, as we will see in the next section.
 
 In this section we compare the new data reshaping functions in the
 \pkg{nc} package with similar functions in other packages. We aim to
-demonstrate that the new \pkg{nc} syntax is  more powerful and
+demonstrate that the new \pkg{nc} syntax is more powerful and
 less repetitive, without sacrificing speed.
 
 \subsection{Comparison with \pkg{tidyr} for a single output reshape column}
@@ -633,15 +633,8 @@ include group names and type conversion functions. Integrating these
 three pieces results in a syntax that is easy to read as well; it is
 more difficult to build and read complex patterns using \pkg{tidyr}
 syntax, which requires specifying regex pattern strings, group names,
-and types as separate arguments. Another advantage of \pkg{nc} is that
-the range of possible type conversions for capture output columns is
-essentially unlimited, since the user may provide an arbitrary type
-conversion function for each group. In contrast the \pkg{tidyr} user
-may specify a prototype for each group, which results in a limited
-range of possible conversions. Of course, post-processing may be used,
-but that introduces some repetition (of capture column names) in the
-code. For example, consider a data set from the World Health
-Organization (WHO):
+and types as separate arguments. For example, consider a data set from
+the World Health Organization (WHO):
 
 <<who>>= 
 data(who, package = "tidyr")
@@ -650,8 +643,8 @@ set.seed(1);sample(names(who), 10)
 @
 
 Each reshape column name starts with \code{new} and has three distinct
-pieces of information: diagnosis type (e.g. \code{ep}, \code{rel}),
-gender (\code{m} or \code{f}), and age range (e.g. \code{1524},
+pieces of information: diagnosis type (e.g., \code{ep}, \code{rel}),
+gender (\code{m} or \code{f}), and age range (e.g., \code{1524},
 \code{4554}). We extract all three pieces of information below,
 and include a function for converting gender to a factor with levels
 in a specific (non-default) order:
@@ -674,11 +667,12 @@ reshaped output is a data table with \code{gender} converted to a factor ---
 this can also be done using \code{tidyr::pivot\_longer}:
 
 <<pivot>>= 
+tidyr.who.sub.names <- c("diagnosis", "gender")               #L0
 tidyr.who.sub.pattern <- "new_?(.*)_(.)"                      #L1
 tidyr.who.pattern <- paste0(tidyr.who.sub.pattern, "(.*)")    #L2
 tidyr::pivot_longer(                                          #L3
   who, cols = grep(tidyr.who.pattern, names(who)),            #L4
-  names_to = c("diagnosis", "gender", "ages"),                #L5
+  names_to = c(tidyr.who.sub.names, "ages"),                  #L5
   names_ptypes = list(gender = factor(levels = c("m", "f"))), #L6
   names_pattern = tidyr.who.pattern)[1:2,]                    #L7
 @
@@ -687,16 +681,16 @@ In the code above we first define a sub-pattern variable for the
 \code{diagnosis} and \code{gender} capture groups, as we did using
 \pkg{nc}. One difference is that the \pkg{tidyr} sub-pattern variable
 is a string with un-named capture groups, whereas the \pkg{nc}
-sub-pattern variable
-is a list which includes capture group names as well as a type
-conversion function. These three parameters are specified as three
-separate arguments in \pkg{tidyr}, which results in some separation
-(e.g. group names defined on L5 but corresponding sub-patterns defined on L1)
-and repetition (e.g. \code{gender} appears on L5 and L6) in the code. The
-pattern also must be repeated: first in the \code{cols} argument (L4)
-to specify the set of input reshape columns, second in the
-\code{names\_pattern} argument (L7) to specify the conversion from
-input reshape column names to output capture column values.
+sub-pattern variable is a list which includes capture group names as
+well as a type conversion function. These three parameters are
+specified as three separate arguments in \pkg{tidyr}, which results in
+some separation (e.g., group names defined on L0 and L5 but corresponding
+sub-patterns defined on L1 and L2) and repetition (e.g., \code{gender}
+appears on L0 and L6) in the code. The pattern also must be repeated:
+first in the \code{cols} argument (L4) to specify the set of input
+reshape columns, second in the \code{names\_pattern} argument (L7) to
+specify the conversion from input reshape column names to output
+capture column values.
 
 Now suppose we want to extract two numeric columns from \code{ages},
 for example to use as interval-censored outputs in a survival
@@ -705,10 +699,9 @@ sub-pattern (including the previously defined group names and type
 conversion function) as the first part of a larger pattern:
 
 <<who2>>= 
-who.typed <- nc::capture_melt_single(
-  who, nc.who.sub.pattern, ages = list(
-    ymin = "0|[0-9]{2}", as.numeric,
-    ymax = "[0-9]{0,2}", function(x)ifelse(x == "", Inf, as.numeric(x))))
+who.typed <- nc::capture_melt_single(who, nc.who.sub.pattern, ages = list(
+  ymin = "0|[0-9]{2}", as.numeric,
+  ymax = "[0-9]{0,2}", function(x)ifelse(x == "", Inf, as.numeric(x))))
 who.typed[, .(rows = .N), by = .(ages, ymin, ymax)]
 
 @
@@ -720,45 +713,44 @@ together, which makes complex patterns easier to read and build from
 smaller pieces. Also, note how an anonymous function is used to
 convert the values captured in the \code{ymax} group to numeric (and
 it maps the empty string to \code{Inf}). Such custom type conversion
-functions are not supported by \pkg{tidyr}, so post-processing must be
-used:
+functions are supported by \pkg{tidyr} since version 1.1.0 (early
+2020), so we can do:
 
 
-<<idyr2>>= 
-tidyr.who.pattern2 <- paste0(tidyr.who.sub.pattern, "((0|[0-9]{2})([0-9]{0,2}))")
-transform(tidyr::pivot_longer(
-  who, cols = grep(tidyr.who.pattern2, names(who)),
-  names_to = c("diagnosis", "gender", "ages", "ymin", "ymax"),
-  names_ptypes = list(gender = factor(levels = c("m", "f")), ymin = numeric()),
-  names_pattern = tidyr.who.pattern2),
-  ymax = ifelse(ymax == "", Inf, as.numeric(ymax)))[1:7,]
+<<tidyRange>>= 
+tidyr.who.range.pattern <- paste0(tidyr.who.sub.pattern, "((0|[0-9]{2})([0-9]{0,2}))")
+tidyr::pivot_longer(
+  who, cols = grep(tidyr.who.range.pattern, names(who)),
+  names_to = c(tidyr.who.sub.names, "ages", "ymin", "ymax"),
+  names_transform = list(
+    gender = function(x)factor(x, levels = c("m", "f")),
+    ymin = as.numeric,
+    ymax = function(x)ifelse(x == "", Inf, as.numeric(x))),
+  names_pattern = tidyr.who.range.pattern)[1:7,]
 @
 
-The code above uses \code{transform} as a post-processing step to
-compute a numeric \code{ymax} column, which involves some repetition
-(\code{ymax} appears four times). Note that numeric conversions which
-do not require special logic (e.g. \code{ymin} above) can be specified
-as prototypes using the \code{names\_ptypes} argument (but specifying
-\code{ymax = numeric()} as a prototype results in a lossy cast error).
+The code above uses the \code{names\_transform} argument to define
+type conversion functions, which requires some repetition (e.g.,
+\code{ymax} and \code{ymin} each appear twice).
 
 To conclude this comparison, we have seen that \pkg{nc} syntax makes
 it easy to read and write complex patterns, because it keeps
 group-specific names and type conversion functions near the
 corresponding sub-patterns. We have also shown that repetition is
-often necessary with \pkg{tidyr} (e.g. pattern, group names), whereas
+often necessary with \pkg{tidyr} (e.g., pattern, group names), whereas
 such repetition can be avoided by using \pkg{nc}.
 
-\subsection{Comparison with \pkg{data.table} and \code{stats::reshape} for multiple reshape output columns}
+\subsection{Comparison with other packages which support multiple reshape output columns}
 
 In this section we demonstrate the advantages of using \pkg{nc} over
-\pkg{data.table} (which is used to implement \pkg{nc}
-functionality). A major advantage is that \pkg{data.table} only
-supports regular expressions for defining the set of input columns to
-reshape; it does not support capture output columns. Another advantage
-is that \pkg{nc} always returns a correct output data set with
-multiple reshape columns, even when the input columns are not sorted
-in a regular order. For example, consider the following simple data
-set in which the columns are not in regular order:
+several alternatives which support multiple reshape output columns. A
+major advantage is that \pkg{nc} directly supports regular expressions
+for defining the input reshape columns and output capture
+columns. Another advantage is that \pkg{nc} always returns a correct
+output data set with multiple reshape columns, even when the input
+columns are not sorted in a regular order. For example, consider the
+following simple data set in which the columns are not in regular
+order:
 
 <<iris2>>= 
 library(data.table)
@@ -804,16 +796,21 @@ melt(TC, measure.vars = list(age = c(1,4), gender = c(3,2)))
 
 This is what \pkg{nc} does internally; it also converts the
 \code{variable} output column to a more interpretable/useful capture
-column (e.g. \code{group} above).
+column (e.g., \code{group} above). As a result of this research we have
+proposed the following new feature for the \pkg{data.table} package,
 
-The \code{stats::reshape} function suffers from the same
-issue. Another issue with this function is that it assumes the output
-reshape column names are the first part of the input column names
-(e.g. Figure~\ref{fig:wide-to-tall}, W$\rightarrow$M1). When input
+<<dtmeasure>>=
+melt(TC, measure.vars = measure(group, value.name, sep="."))
+@ 
+
+The \code{stats::reshape} function suffers from the same issue as the
+\code{patterns} usage above. Another issue with this
+function is that it assumes the output reshape column names are the
+first part of the input column names
+(e.g., Figure~\ref{fig:wide-to-tall}, W$\rightarrow$M1). When input
 column names have a different structure
-(e.g. Figure~\ref{fig:wide-to-tall}, W$\rightarrow$M2), they must be
-renamed, putting the desired output reshape
-column names first:
+(e.g., Figure~\ref{fig:wide-to-tall}, W$\rightarrow$M2), they must be
+renamed, putting the desired output reshape column names first:
 
 <<reshapenames>>= 
 TC.renamed <- structure(TC, names = sub("(.*)[.](.*)", "\\2.\\1", names(TC)))
@@ -850,22 +847,20 @@ approach, which assumes the input columns to reshape have regular
 names.
 
 To conclude this section, we have discussed some advantages of
-\pkg{nc} relative to other R packages. Regular expressions can be used
-in \pkg{nc} to specify capture output columns, which are not provided
-in the results from other functions such as
-\code{data.table::melt}. Input columns with regular names do not need
-to be renamed/sorted for \pkg{nc} functions, whereas renaming/sorting
-may be necessary using other functions (\code{data.table::melt},
-\code{stats::reshape}). Verbose/explicit control table code is always necessary
-with \pkg{cdata}, whereas a terse/implicit regular expression syntax is
-used with \pkg{nc} to simplify the definition of reshape operations.
+\pkg{nc} relative to other R packages. Input columns with regular
+names do not need to be renamed/sorted for \pkg{nc} functions, whereas
+renaming/sorting may be necessary using
+\code{stats::reshape}. Verbose/explicit control table code is always
+necessary with \pkg{cdata}, whereas a terse/implicit regular
+expression syntax is used with \pkg{nc} to simplify the definition of
+reshape operations.
 
 \subsection{Comparing computation times of functions for
   wide-to-tall data reshaping}
 
 \begin{figure}
   \centering
-  \includegraphics[width = \textwidth]{figure-who-both-rows.pdf}
+  \includegraphics[width = \textwidth]{figure-who-rows-new.pdf}
   \vskip -0.5cm
   \caption{Timings for computing a tall output table with a single
     reshape column from a wide input table with
@@ -946,7 +941,7 @@ about five times faster than \code{tidyr::pivot\_longer}
 
 \begin{figure}
   \centering
-  \includegraphics[width = \textwidth]{figure-who-both-cols.pdf}
+  \includegraphics[width = \textwidth]{figure-who-cols-new.pdf}
   \vskip -0.5cm
   \caption{
       \label{fig:timings-single-cols}
@@ -1109,7 +1104,7 @@ algorithm used in the \pkg{data.table} package.
 
 \begin{figure}
   \centering 
-  \includegraphics[width = \textwidth]{figure-iris-rows.pdf}
+  \includegraphics[width = \textwidth]{figure-iris-rows-new.pdf}
   \vskip -0.5cm
   \caption{
     Timings for computing a tall output table with multiple (2)
@@ -1153,7 +1148,7 @@ article can be freely downloaded from
 
 \begin{figure}
   \centering 
-  \includegraphics[width = \textwidth]{figure-iris-cols.pdf}
+  \includegraphics[width = \textwidth]{figure-iris-cols-new.pdf}
   \vskip -0.5cm
   \caption{    
     Timings for computing a tall output table with multiple (2)

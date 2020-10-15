@@ -1,4 +1,4 @@
-RJwrapper.pdf: hocking.tex hocking.bib figure-1-iris.pdf figure-who-both-cols.png figure-who-both-rows.png figure-iris-cols.png figure-iris-rows.png
+RJwrapper.pdf: hocking.tex hocking.bib figure-1-iris.pdf figure-who-cols-new.png figure-who-rows-new.png figure-iris-cols-new.png figure-iris-rows-new.png
 	R -e "tools::texi2pdf('RJwrapper.tex')"
 RJwrapper-reproduced.pdf: RJwrapper.pdf
 	mkdir -p submission
@@ -15,9 +15,21 @@ hocking.tex: hocking-edited.Rnw
 	R CMD Sweave hocking-edited.Rnw
 	mv hocking-edited.R hocking.R
 	mv hocking-edited.tex hocking.tex
-figure-iris-cols-new.png: figure-iris-cols-new.R figure-iris-cols-new-data.rds figure-iris-cols-new-convert-data.rds
+figure-iris-cols-new.png: figure-iris-cols-new.R figure-iris-cols-new-data.csv 
 	R --vanilla < $<
-figure-iris-cols-new-data.rds: figure-iris-cols-new-data.R
+figure-iris-cols-new-data.csv: figure-iris-cols-new-data.R
+	R --vanilla < $<
+figure-iris-rows-new.png: figure-iris-rows-new.R figure-iris-rows-new-data.csv 
+	R --vanilla < $<
+figure-iris-rows-new-data.csv: figure-iris-rows-new-data.R
+	R --vanilla < $<
+figure-who-rows-new.png: figure-who-rows-new.R figure-who-rows-new-data.csv 
+	R --vanilla < $<
+figure-who-rows-new-data.csv: figure-who-rows-new-data.R
+	R --vanilla < $<
+figure-who-cols-new.png: figure-who-cols-new.R figure-who-cols-new-data.csv 
+	R --vanilla < $<
+figure-who-cols-new-data.csv: figure-who-cols-new-data.R
 	R --vanilla < $<
 figure-iris-cols.png: figure-iris-cols.R figure-iris-cols-data.rds figure-iris-cols-convert-data.rds
 	R --vanilla < $<

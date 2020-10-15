@@ -13,7 +13,7 @@ pkg.color <- c(
   "tidyfast::dt_pivot_longer"="#A6761D")
 ##, "#666666")
 
-who.timings <- fread("figure-who-cols-new-data.csv")
+who.timings <- fread("figure-who-rows-new-data.csv")
 who.info <- nc::capture_first_df(who.timings, expr=list(
   pkg.fun=list(
     pkg=".*?",
@@ -27,14 +27,18 @@ stats.timings <- who.info[pkg.fun %in% names(pkg.color), .(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
-), by=.(N.col, pkg.fun, capture.columns)]
+), by=.(N.rows, pkg.fun, capture.columns)]
 ref.dt <- data.table(
   seconds=c(60*60, 60, 1),
   unit=c("hour", "minute", "second"))[unit!="hour"]
-my.top <- list(cex=0.75, "top.polygons")
-my.side <- list(cex=0.75, "last.polygons")
+cex.poly <- 0.75
+right.side <- list(cex=cex.poly, "last.qp")
+left.side <- list(cex=cex.poly, rot=40, "last.qp")
+stats.max <- stats.timings[
+, .SD[which.max(N.rows)],
+  by=.(capture.columns, pkg.fun)]
 dl <- ggplot()+
-  ggtitle("Single reshape output column, variable number of input columns")+
+  ggtitle("Single reshape output column, variable number of input rows")+
   facet_grid(. ~ capture.columns, labeller=label_both)+
   geom_hline(aes(
     yintercept=seconds),
@@ -54,37 +58,36 @@ dl <- ggplot()+
   scale_color_manual(values=pkg.color)+
   scale_fill_manual(values=pkg.color)+
   geom_dl(aes(
-    N.col, median, color=pkg.fun, label=pkg.fun),
-    data=stats.timings[pkg.fun == "stats::reshape"],
-    method="my.top")+
+    N.rows, median, color=pkg.fun, label=pkg.fun),
+    data=stats.timings[N.rows==max(N.rows)],
+    method="right.side")+
   geom_dl(aes(
-    N.col, median, color=pkg.fun, label=pkg.fun),
-    data=stats.timings[pkg.fun != "stats::reshape"],
-    method="my.side")+
+    N.rows, median, color=pkg.fun, label=pkg.fun),
+    data=stats.max[N.rows!=max(N.rows)],
+    method="left.side")+
   geom_line(aes(
-    N.col, median, group=pkg.fun),
+    N.rows, median, group=pkg.fun),
     color="white",
     size=2,
     alpha=0.5,
     data=stats.timings)+
   geom_line(aes(
-    N.col, median, color=pkg.fun),
+    N.rows, median, color=pkg.fun),
     data=stats.timings)+
   geom_ribbon(aes(
-    N.col, ymin=q25, ymax=q75, fill=pkg.fun),
+    N.rows, ymin=q25, ymax=q75, fill=pkg.fun),
     alpha=0.5,
     data=stats.timings)+
   scale_x_log10(
-    "Number of columns in wide input data table",
+    "Number of rows in wide input data table",
     breaks=10^seq(2, 5),
-    limits=stats.timings[, c(min(N.col), max(N.col)*20)])+
+    limits=stats.timings[, c(min(N.rows), max(N.rows)*100)])+
   scale_y_log10(
     "Computation time (seconds)")
-
-pdf("figure-who-cols-new.pdf", 9, 3)
+pdf("figure-who-rows-new.pdf", 9, 4)
 print(dl)
 dev.off()
-png("figure-who-cols-new.png", 9, 3, units="in", res=100)
+png("figure-who-rows-new.png", 9, 4, units="in", res=100)
 print(dl)
 dev.off()
 
