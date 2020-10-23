@@ -18,6 +18,11 @@ Abstract: Regular expressions are powerful tools for extracting tables
 - Main input/source file to edit is [[file:hocking.Rnw]] 
 - [[file:Makefile]] takes care of creating [[file:submission.zip]]
 
+** TODOs
+
+compare with tidyfst::longer_dt?
+https://hope-data-science.github.io/tidyfst/articles/example3_reshape.html
+
 ** 29 Oct 2019
 [[file:figure-iris-cols-new.R]] makes a new figure based on [[file:figure-iris-cols-new-data.R][timings]]
 computed using updated R packages.
