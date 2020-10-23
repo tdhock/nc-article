@@ -23,6 +23,37 @@ Abstract: Regular expressions are powerful tools for extracting tables
 compare with tidyfst::longer_dt?
 https://hope-data-science.github.io/tidyfst/articles/example3_reshape.html
 
+** 11 Oct 2020
+
+[[file:figure-who-cols-new-data.R]] runs new timings and
+[[file:figure-who-cols-new.R]] makes new figure:
+
+[[file:figure-who-cols-new.png]]
+
+** 5 Oct 2020
+
+[[file:figure-who-rows-dt-data.R]] and [[file:figure-iris-rows-dt-data.R]]
+compute timings, [[file:figure-who-rows-dt.R]] plots
+
+[[file:figure-who-rows-dt.png]]
+
+[[file:figure-who-cols-dt-data.R]] computes timings,
+[[file:figure-who-cols-dt.R]] plots
+
+[[file:figure-who-cols-dt.png]]
+
+[[file:figure-iris-cols-dt-valgrind.R]] run under valgrind, no memory
+problems.
+
+[[file:figure-iris-cols-dt-data.R]] computes timings of new data table
+methods, [[file:figure-iris-cols-dt.R]] makes
+
+[[file:figure-iris-cols-dt.png]]
+
+** 17 May 2020
+
+maybe add comparison with [[https://github.com/TysonStanley/tidyfast/blob/master/R/pivot_longer.R][tidyfast::dt_pivot_longer]]?
+
 ** 29 Oct 2019
 [[file:figure-iris-cols-new.R]] makes a new figure based on [[file:figure-iris-cols-new-data.R][timings]]
 computed using updated R packages.

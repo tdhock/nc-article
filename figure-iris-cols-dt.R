@@ -1,20 +1,19 @@
-source("packages-new.R")
+source("packages-dt.R")
 
-pkg.color <- c(
-  "data.table::melt"="#1B9E77",
-  "reshape2::melt"="#D95F02",
-  "tidyr::gather"="#7570B3",
-  "tidyr::pivot_longer"="#7570B3",
-  "cdata::unpivot_to_blocks"="#E7298A",
-  "cdata::rowrecs_to_blocks"="#E7298A",
-  "nc::capture_melt_multiple"="#66A61E",
-  "stats::reshape"="#E6AB02",
-  "utils::stack"="#E6AB02")
-  #"#A6761D", "#666666")
+RColorBrewer::display.brewer.all()
+dput(RColorBrewer::brewer.pal(Inf, "Paired"))
 
-iris.timings <- fread("figure-iris-cols-new-data.csv")
+#lite dark
+pkg.color <- c("tidyr::pivot_longer"="black",
+  "data.table::melt.new.sep"="#A6CEE3", "data.table::melt.new.pattern"="#1F78B4", #blue
+  "#B2DF8A", "#33A02C", #green
+  "data.table::melt.old.set"="#FB9A99", "data.table::melt.old.join"="#E31A1C", #red
+  "#FDBF6F", "#FF7F00", #orange
+  "#CAB2D6", "data.table::melt.new.var_tab"="#6A3D9A", #purple
+  "#FFFF99", "#B15928") #yellow/brown
+
 iris.timings[, seconds := time/1e9]
-stats.timings <- iris.timings[expr %in% names(pkg.color), .(
+stats.timings <- iris.timings[, .(
   median=median(seconds),
   q25=quantile(seconds, 0.25),
   q75=quantile(seconds, 0.75)
@@ -34,8 +33,9 @@ stats.timings[N.col>4000, {
 
 ref.dt <- data.table(
   seconds=c(60*60, 60, 1),
-  unit=c("hour", "minute", "second"))[unit!="hour"]
-dl <- ggplot()+
+  unit=c("hour", "minute", "second"))[unit=="second"]
+
+gg <- ggplot()+
   ggtitle("Multiple reshape output columns, variable number of input columns")+
   geom_hline(aes(
     yintercept=seconds),
@@ -49,21 +49,9 @@ dl <- ggplot()+
     size=3,
     vjust=1.2)+
   theme_bw()+
-  theme(
-    legend.position = "none",
-    panel.spacing=grid::unit(0, "lines"))+
-  scale_color_manual(values=pkg.color)+
-  scale_fill_manual(values=pkg.color)+
-  geom_dl(aes(
-    N.col, median, color=expr, label=expr),
-    data=stats.timings,
-    method=list(cex=0.75, "last.polygons"))+
-  geom_line(aes(
-    N.col, median, group=expr),
-    color="white",
-    alpha=0.5,
-    size=2,
-    data=stats.timings)+
+  theme(panel.spacing=grid::unit(0, "lines"))+
+  ## scale_color_manual(values=pkg.color)+
+  ## scale_fill_manual(values=pkg.color)+
   geom_line(aes(
     N.col, median, color=expr),
     data=stats.timings)+
@@ -72,16 +60,17 @@ dl <- ggplot()+
     alpha=0.2,
     data=stats.timings)+
   scale_x_log10(
-    "Number of columns in wide input data table",
+    "Number of cols in wide input data table",
     limits=c(NA, max(stats.timings$N.col)*20))+
   scale_y_log10(
     "Computation time (seconds)")
+dl <- directlabels::direct.label(gg, list(cex=0.75, "last.polygons"))
 
-pdf("figure-iris-cols-new.pdf", 7, 3)
+pdf("figure-iris-cols-dt.pdf", 7, 3)
 print(dl)
 dev.off()
 
-png("figure-iris-cols-new.png", 7, 3, units="in", res=100)
+png("figure-iris-cols-dt.png", 7, 3, units="in", res=100)
 print(dl)
 dev.off()
 

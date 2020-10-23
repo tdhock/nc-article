@@ -10,7 +10,7 @@
 ### e.g. "tdhock/animint@f877163cd181f390de3ef9a38bb8bdd0396d08a4" and
 ### we use install_github to get it, if necessary.
 works_with_R <- function(Rvers,...){
-  local.lib <- file.path(getwd(), "library-new")
+  local.lib <- file.path(getwd(), "library-dt")
   old.path.vec <- .libPaths()
   if(is.null(getOption("repos"))){
     options(repos="http://cloud.r-project.org")
@@ -65,14 +65,9 @@ options(repos=c(
           "http://cloud.r-project.org"))
 works_with_R(
   "4.0.2",
-  bit64="4.0.5",
-  "Rdatatable/data.table@dfae9e2d060a138e8f2c27b7046ffc570254a36b",
-  tidyfast="0.2.1",
+  "Rdatatable/data.table@c02fa9e8e6016986bbad3113c149d68104d70bff",
   quadprog="1.5.8",
   "tdhock/directlabels@f690edf6db2790960aa00ca388b7e11da74bf783",
   microbenchmark="1.4.7",
-  ggplot2="3.3.2",
-  tidyr="1.1.2",
-  "tdhock/nc@8bca3b47a44481e084d1acabd1a3dd4c945044d1",
-  reshape2="1.4.4",
-  cdata="1.1.8")
+  ggplot2="3.2.1",
+  tidyr="1.0.0")
