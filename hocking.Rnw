@@ -5,7 +5,7 @@
 \newcommand{\sectionrex}{Comparing \pkg{namedCapture} variable argument syntax with \pkg{rex}}
 \newcommand{\sectioncomparisons}{Comparisons with other R packages}
 
-\title{Regular expressions and reshaping using data tables and the
+\title{Regular expressions for wide-to-tall data reshaping using the
   \pkg{nc} package}
 
 \author{by Toby Dylan Hocking}
@@ -19,20 +19,20 @@
 \abstract{Regular expressions are powerful tools for extracting tables
   from non-tabular text data. Capturing regular expressions that
   describe information to extract from column names can be especially
-  useful when reshaping a data table from wide (one row with many
-  columns) to tall (one column with many rows). We present the R
-  package \pkg{nc} (short for named capture), which provides functions
-  for data reshaping, regular expressions, and a uniform interface to
-  three C libraries (PCRE, RE2, ICU). We describe the main features of
-  \pkg{nc}, then provide detailed comparisons with related R packages
-  (\pkg{stats}, \pkg{utils}, \pkg{data.table}, \pkg{tidyr},
-  \pkg{reshape2}, \pkg{cdata}).}
+  useful when reshaping a data table from wide (few rows with many
+  regularly named columns) to tall (fewer columns with more rows). We
+  present the R package \pkg{nc} (short for named capture), which
+  provides functions for wide-to-tall data reshaping using regular
+  expressions. We describe the main new ideas of \pkg{nc}, then
+  provide detailed comparisons with related R packages (\pkg{stats},
+  \pkg{utils}, \pkg{data.table}, \pkg{tidyr}, \pkg{tidyfast},
+  \pkg{tidyfst}, \pkg{reshape2}, \pkg{cdata}).}
 
 \section{Introduction}
 
 Regular expressions are powerful tools for text processing that are
 available in many programming languages, including R. A regular
-expression \dfn{pattern} defines a set of \dfn{matches} in a
+expression \dfn{pattern} or \dfn{regex} defines a set of \dfn{matches} in a
 \dfn{subject} string. For some example subjects, consider the column
 names of the famous iris data set in R: \code{Species},
 \code{Sepal.Length}, \code{Petal.Width}, etc. Some example patterns: a
@@ -43,7 +43,7 @@ characters. Therefore the pattern \code{.*[.].*} matches zero or more
 non-newline characters, followed by a period, followed by zero or more
 non-newline characters. It would match \code{Sepal.Length} and
 \code{Petal.Width} but it would not match \code{Species}. For a more
-detailed discussion of regular expression patterns, we refer the
+detailed discussion of regular expressions, we refer the
 reader to \code{help(regex)} in R or the book of \citet{Friedl2002}.
 
 The focus of this article is patterns with capture groups, which are
@@ -78,7 +78,8 @@ type conversion functions.
 
 A main thesis of this article is that regular expressions can greatly
 simplify the code required to specify wide-to-tall data reshaping
-operations. For one such operation the input is a ``wide'' table with
+operations (when the input columns adhere to a regular naming convention).
+For one such operation the input is a ``wide'' table with
 many columns, and the desired output is a ``tall'' table with more
 rows, and some of the input columns converted into a smaller number of
 output columns (Figure~\ref{fig:wide-to-tall}). To clarify the
@@ -108,15 +109,7 @@ purposes (e.g., scatterplot to compare sepal and petal sizes) the
 desired reshaping operation results in a table with multiple reshape
 output columns (M1 with \code{Sepal} and \code{Petal} columns in
 Figure~\ref{fig:wide-to-tall}), two copied columns, and one column
-captured from the names of the reshaped input columns. We propose to
-use the new regular expression syntax of
-\citet{HOCKING2019-namedCapture}, e.g., \code{part = ".*",} \code{"[.]",}
-\code{dimension = ".*"}, to define both types of wide-to-tall data
-reshaping operations. In particular, we propose using a single
-capturing regular expression for defining both (1) the subset of
-reshape input columns to convert, and (2) the additional capture
-output columns. We will show that this results in a simple, powerful,
-non-repetitive syntax for wide-to-tall data reshaping.
+captured from the names of the reshaped input columns. 
 
 \begin{figure}
   \centering
@@ -135,22 +128,25 @@ In this article our original contribution is the \R\ package
 proposed named capture regex syntax of
 \citet{HOCKING2019-namedCapture}, in addition to several new functions
 that perform wide-to-tall data reshaping using regular
-expressions. The main new ideas are (1) using un-named capture groups
-in the regex pattern string to provide a uniform interface to three
-regex C libraries, (2) integration of \CRANpkg{data.table}
-functionality \citep{Dowle2019}, and (3) specifying wide-to-tall
-reshape operations with a concise syntax which results in less
-repetitive user code than other packages. A secondary contribution of
-this article is a detailed comparison of current R functions for
-reshaping data, in terms of syntax, computation times, and
-functionality (Table~\ref{tab:features}).
+expressions.
+The main new idea is to use a single
+named capture regular expression for defining both (1) the subset of
+reshape input columns to convert, and (2) the additional capture
+output columns. We will show that this results in a simple, powerful,
+non-repetitive syntax for wide-to-tall data reshaping.
+A secondary contribution of this article is a detailed
+comparison of current R functions for wide-to-tall data reshaping, in terms of
+syntax, computation times, and functionality
+(Table~\ref{tab:features}).
+Note that in this article we do not discuss tall-to-wide data reshaping,
+because regular expressions are not useful in that case.
 
 The organization of this article is as follows. The rest of this
 introduction provides an overview of current \R\ packages for regular
 expressions and data reshaping. The second section describes the
 proposed functions of the \CRANpkg{nc} package, then the third section
 provides detailed comparisons with other \R\ packages. The article
-concludes with a summary and discussion.
+concludes with a summary and discussion of possible future work.
 
 \section{Related work}
 
@@ -175,10 +171,10 @@ explained in detail below:
 \item[single] refers to support for converting input reshape columns
   of the same type to a single reshape output column.
 \item[multiple] refers to support for converting input reshape columns of
-  possibly different types to multiple output reshape columns; ``sorted''
+  possibly different types to multiple output reshape columns; ``if sorted''
   means that conversion works correctly only if the input reshape columns are sorted
   in a regular order, e.g., \code{Sepal.Length}, \code{Sepal.Width},
-  \code{Petal.Length}, \code{Petal.Width}; ``unsorted'' means that
+  \code{Petal.Length}, \code{Petal.Width}; ``yes'' means that
   conversion works correctly even if the they are not sorted,
   e.g., \code{Sepal.Length}, \code{Sepal.Width}, \code{Petal.Width},
   \code{Petal.Length}.
@@ -202,16 +198,17 @@ explained in detail below:
 \toprule
 \code{pkg::function} & single & multiple & regex & na.rm & types & list \\
     \midrule
-\code{nc::capture\_melt\_multiple} & no & unsorted & capture & yes & any & yes\\
+\code{nc::capture\_melt\_multiple} & no & yes & capture & yes & any & yes\\
 \code{nc::capture\_melt\_single} & yes & no & capture & yes & any & yes\\
-\code{tidyr::pivot\_longer} & yes & unsorted & capture & yes & any & yes\\
-\code{data.table::melt}, \code{measure} & yes & unsorted & capture & yes & any & yes\\
-\code{stats::reshape} & yes & sorted & capture & no & some & no\\
-\code{tidyfast::dt\_pivot\_longer} & yes & no & no & yes & no & yes \\
+\code{tidyr::pivot\_longer} & yes & yes & capture & yes & any & yes\\
+\code{stats::reshape} & yes & if sorted & capture & no & some & no\\
+\code{data.table::melt}, \code{patterns} & yes & if sorted & match & yes & no & yes\\
+\code{tidyfst::longer\_dt} & yes & no & match & yes & no & yes \\
 \code{tidyr::gather} & yes & no & no & yes & some & yes\\
-\code{reshape2::melt} & yes & no & no & yes & no & no\\
-\code{cdata::rowrecs\_to\_blocks} & yes & unsorted & no & no &no & yes\\
+\code{tidyfast::dt\_pivot\_longer} & yes & no & no & yes & no & yes \\
+\code{cdata::rowrecs\_to\_blocks} & yes & yes & no & no &no & yes\\
 \code{cdata::unpivot\_to\_blocks} & yes & no & no & no &no & yes\\
+\code{reshape2::melt} & yes & no & no & yes & no & no\\
 \code{utils::stack} & yes & no & no & no & no & no\\
 \bottomrule
     \end{tabular}
@@ -219,8 +216,8 @@ explained in detail below:
       Reshaping functions in R support various features:
       ``single'' for converting input columns into a single output column;
       ``multiple'' for converting input columns
-      (either ``sorted'' in a regular order, or ``unsorted'' for any order)
-      into multiple output columns of different types;
+      (either ``if sorted'' in a regular order, or ``yes'' for any order)
+      into multiple output columns of possibly different types;
       ``regex'' for regular expressions to
       ``match'' input column names or to
       ``capture'' and create new output column names;
@@ -273,15 +270,18 @@ removing missing values, although different arguments are used
 The \CRANpkg{reshape2} and \pkg{data.table} packages each provide a
 \code{melt} function for converting data from wide to tall
 \citep{Wickham2007, Dowle2019}. The older \pkg{reshape2} version only
-supports converting input reshape columns to a single output reshape column, whereas
-the newer \pkg{data.table} version also supports multiple output reshape
-columns. Regular expressions are not supported in \pkg{reshape2}, but
-can be used with \code{data.table::patterns} to match input column
-names to convert (although the output can be incorrect if columns are
-not sorted in a regular order). Neither function supports type
-conversion, and both functions support removing missing values from
-the output using the \code{na.rm} argument. List column output is
-supported in \pkg{data.table} but not \pkg{reshape2}.
+supports converting input reshape columns to a single output reshape
+column, whereas the newer \pkg{data.table} version also supports
+multiple output reshape columns. Regular expressions are not supported
+in \pkg{reshape2}, but can be used with \code{data.table::patterns} to
+match input column names to convert (although the output can be
+incorrect if columns are not sorted in a regular order). Neither
+function supports type conversion, and both functions support removing
+missing values from the output using the \code{na.rm} argument. List
+column output is supported in \pkg{data.table} but not \pkg{reshape2}.
+The \CRANpkg{tidyfast} \citep{Barrett2020} and \CRANpkg{tidyfst}
+\citep{HuangZhao2020} packages provide reshaping functions that use
+\code{data.table::melt} internally.
 
 The \CRANpkg{cdata} package provides several functions for data
 reshaping, including \code{rowrecs\_to\_blocks} and
@@ -296,273 +296,57 @@ input columns. Both functions support list column output, but other
 features from Table~\ref{tab:features} are not supported (regular
 expressions, missing value removal, type conversion).
 
-\section{New features in \pkg{nc} for regular expressions and data reshaping}
+\section{New features for wide-to-tall data reshaping using regular expressions}
 
 The \pkg{nc} package provides new regular expression functionality
 based on the syntax recently proposed by
-\citet{HOCKING2019-namedCapture}. In this section we first discuss how
-the \pkg{nc} package implements this syntax as a front-end to three
-regex engines, and we then discuss the new features involving data
-table integration and data reshaping.
-
-\subsection{Uniform interface to three regex engines}
-
-Several C libraries providing regular expression engines are available
-in R. The standard R distribution has included the Perl-Compatible
-Regular Expressions (PCRE) C library since 2002 \citep{R.NEWS.1.txt}.
-CRAN package \pkg{re2r} provides the RE2 library, and \pkg{stringi}
-provides the ICU library. Each of these regex engines has a unique
-feature set, and may be preferred for different applications. For
-example, PCRE is installed by default, RE2 guarantees matching in
-polynomial time, and ICU provides strong unicode support. For a more
-detailed comparison of the relative strengths of each regex library,
-we refer the reader to our previous research paper
-\citep{HOCKING2019-namedCapture}.
-
-Each regex engine has a different R interface, so switching from
-one engine to another may require non-trivial modifications of user
-code. In order to make switching between engines easier,
-\citet{HOCKING2019-namedCapture} introduced the \pkg{namedCapture}
-package, which provides a uniform interface for capturing text using
-PCRE and RE2. The user may specify the desired engine via
-an option; the
-\pkg{namedCapture} package provides the output in a uniform
-format. However \pkg{namedCapture} requires the engine to support
-specifying capture group names in regex pattern strings, and to
-support output of the group names to R (which ICU does not support).
-
-Our proposed \pkg{nc} package provides support for the ICU engine in
-addition to PCRE and RE2. The \pkg{nc} package implements this
-functionality using un-named capture groups, which are supported in
-all three regex engines. In particular, a regular expression is
-constructed in R code that uses named arguments to indicate capturing
-sub-patterns, which are translated to un-named groups when passed to
-the regex engine. For example, consider a user who wants to capture
-the two pieces of the column names of the iris data,
-e.g., \code{Sepal.Length}. The user would typically specify the
-capturing regular expression as a string literal,
-e.g., \code{"(.*)[.](.*)"}.  Using \pkg{nc} the same pattern can be
-applied to the iris data column names via
-
-<<capture-iris-cols>>= 
-nc::capture_first_vec(
-  names(iris), part = ".*", "[.]", dim = ".*", engine = "ICU", nomatch.error = FALSE)
-
-@
-
-Above we see an example usage of \code{nc:capture\_first\_vec}, which
-is for capturing the first match of a regex from each element of a
-character vector subject (the first argument). There are a variable
-number of other arguments (\code{...}) which are used to define the
-regex pattern. In this case there are three pattern arguments:
-\code{part = ".*", "[.]", dim = ".*"}. Each named R argument in the
-pattern generates an un-named capture group by enclosing the specified
-character string in parentheses, e.g., \code{(.*)} for both \code{part}
-and \code{dim} arguments above. All of the sub-patterns are pasted
-together in the sequence they appear in order to create the final
-pattern that is used with the specified regex engine. The
-\code{nomatch.error = FALSE} argument is given because the default is
-to stop with an error if any subjects do not match the specified
-pattern (the fifth subject \code{Species} does not match). Under the
-hood, the following function is called to parse the pattern arguments:
-
-<<see>>= 
-str(compiled <- nc::var_args_list(part = ".*", "[.]", dim = ".*"))
-
-@
-
-This function is intended mostly for internal use, but can be useful
-for viewing the generated regex pattern (or using it as input to
-another regex function). The return value is a named list of two
-elements: \code{pattern} is the capturing regular expression which is
-generated based on the input arguments, and \code{fun.list} is a named
-list of type conversion functions. If the user does not specify a type
-conversion function for a group (as in the example code above), then
-the default is \code{base::identity}, which simply returns the
-captured character strings. Group-specific type conversion functions
-are useful for converting captured text into numeric output columns
-\citep{HOCKING2019-namedCapture}. Note that the order of elements in
-\code{fun.list} corresponds to the order of capture groups in the
-pattern (e.g., first capture group named \code{part}, second
-\code{dim}). These data can be used with any regex engine that
-supports un-named capture groups (including ICU) in order to get a
-capture matrix with column names, e.g.
-
-<<icu>>= 
-m <- stringi::stri_match_first_regex(names(iris), compiled$pattern)
-colnames(m) <- c("match", names(compiled$fun.list))
-m
-
-@
-
-Again, this is not the recommended usage of \pkg{nc}, but here we give
-these details in order to explain how it works. Note that the result
-from \pkg{stringi} is a character matrix with three columns: first for
-the entire match, and another column for each capture group. Using the
-same pattern with \code{base::regexpr} (PCRE engine) or
-\code{re2r::re2\_match} (RE2 engine) yields output in varying formats.
-The \pkg{nc} package takes care of converting these different results
-into a standard data table format which makes it easy to switch regex
-engines (by changing the value of the \code{engine} argument).
-
-Note that the standard format used by \pkg{nc}, as shown above with
-\code{nc::capture\_first\_vec}, is a data table. The main reason that
-data tables are always output by \pkg{nc} matching functions is in
-order to support numeric output columns, when type conversion
-functions are specified. A secondary reason is for the convenient
-syntax, as we will show in the next section.
-
-\subsection{Data table integration and
-  \code{nc::field} to avoid repetition}
-
-In the previous section we mentioned that every \pkg{nc} matching
-function outputs a data table, which can be
-queried/summarized/joined/etc using the convenient syntax of the
-\pkg{data.table} package. In this section we show an example of how
-this syntax makes it easy to parse non-tabular text output files from
-a bioinformatics program.  We also show an example of how the new
-\code{nc::field} function can be used to avoid repetition when
-defining a pattern to match fields of the form \code{variable = value}.
-
-We consider a bioinformatics program called SweeD which outputs two
-data files that are linked by an integer alignment ID number
-\citep{SweeD}. The ``Report'' file is similar to tab-separated values
-(TSV), except that there are some blank lines, followed by two forward
-slashes, followed by the integer alignment number. For example, the
-first few lines of the first two alignments look like:
-
-<<sweedReport>>= 
-report.txt.gz <- system.file("extdata", "SweeD_Report.txt.gz", package = "nc")
-report.vec <- readLines(report.txt.gz)
-cat(report.vec[1:5], sep = "\n")
-cat(report.vec[1003:1008], sep = "\n")
-
-@
-
-The file above can be easily parsed by \code{nc::capture\_all\_str},
-which is for finding all matches of a regular expression in a
-multi-line text file:
-nn
-<<parseReport>>= 
-report.alignments <- nc::capture_all_str(
-  report.vec, "//", Alignment = "[0-9]+", TSV = "[^/]+")
-class(report.alignments)
-dim(report.alignments)
-nchar(report.alignments$TSV)
-substr(as.matrix(report.alignments[1:2]), 1, 50)
-
-@
-
-The code above computes a data table with ten rows, one for each match
-in the text file. There are two columns: \code{Alignment} is a unique
-identifier, and \code{TSV} contains the tab-separated values in each
-block. Each \code{TSV} entry is a long text string (about 40,000
-characters); we display the first 50 characters of the first two
-blocks above. Because the result is a data table, we can parse the
-\code{TSV} using a call to \code{fread} inside of a \code{by} block:
-
-<<freadby>>= 
-(report.positions <- report.alignments[, data.table::fread(text = TSV), by = Alignment])
-@
-
-A bioinformatics analyst may desire to plot the \code{Likelihood} or
-\code{Alpha} values in a genome browser, as a function of
-\code{Position} along the chromosome. Each alignment has a chromosome
-name which therefore needs to be added/joined to this table; the
-second ``Info'' file has the chromosome name, as well as some other
-summary statistics for each alignment:
-
-<<info>>= 
-info.txt.gz <- system.file("extdata", "SweeD_Info.txt.gz", package = "nc")
-info.vec <- readLines(info.txt.gz)
-info.vec[24:40]
-@
-
-Again, the data above can be parsed to a data table via a regular
-expression:
-
-<<infoparsed>>= 
-nc::capture_all_str(
-  info.vec, " ",
-  "Alignment", " ", Alignment = "[0-9]+",
-  "\n\n\t\t",
-  "Chromosome", ":\t\t", Chromosome = ".*")
-@
-
-The result above is a data table with ten rows, one for each
-alignment. There are two columns: the first is the \code{Alignment}
-identifier, and the second is the \code{Chromosome} name. Note the
-repetition in the code above: \code{Alignment}/\code{Chromosome}
-appear as capture group names as well as in the pattern string
-literals. Such repetition can be avoided by using the \code{nc::field}
-helper function, which uses its first argument for the capture group
-name as well as a pattern to match:
-
-<<infoparsedfield>>= 
-(info.alignments <- nc::capture_all_str(
-  info.vec, " ",
-  nc::field("Alignment", " ", "[0-9]+"),
-  "\n\n\t\t",
-  nc::field("Chromosome", ":\t\t", ".*")))
-
-@
-
-Note that the repetition in the code has been removed, and the result
-is the same (because the generated regex pattern is the same). Also
-note that the order of the regex string literals is unchanged, so the
-pattern is as easy to read/understand as the original repetitive
-version. Internally, \code{nc::field} generates a pattern by
-concatenating all of its arguments; the first argument is also used as
-the capture group name for the third argument. In general,
-\code{nc::field} is useful whenever the subject contains fields of the
-form \code{variable = value}.
-
-In order to create the desired output table with \code{Chromosome} and
-\code{Position} columns, we join the two data tables:
-
-<<join>>= 
-info.alignments[report.positions, on = "Alignment"]
-@
-
-To conclude this section, we have shown that
-\code{nc::capture\_all\_str} inputs a multi-line text file subject,
-then outputs a data table with one row per match and one column per
-capture group. We have also shown how these data tables may be further
-processed (e.g., \code{fread}, \code{by = Alignment}) and joined using
-the convenient data table syntax. Finally, we showed two examples of
-using \code{nc::field} to define patterns that match/capture
-fields of the form \code{variable = value}.
-
-\subsection{New \pkg{nc} functions for wide-to-tall data reshaping}
-
+\citet{HOCKING2019-namedCapture}. During the rest of the article we
+give only a brief overview of this syntax; for a more detailed review
+please read the \pkg{nc} package vignettes.
+%In this section we focuson explaining the new functionality for wide-to-tall data reshaping.
 In this section we show how new \pkg{nc} functions can be used to
 reshape wide data (with many columns) to tall data (with fewer
 columns, and more rows). We begin by considering the two data
 visualization problems which were mentioned in the introduction, and
-which involve the familiar iris data set. First, suppose we would like
+which involve the familiar iris data set.
+
+\subsection{Single reshape output column}
+
+First, suppose we would like
 to visualize the univariate distribution of each numeric variable. One
 way would be to use a histogram of each numeric variable, with row
 facets for flower part and column facets for measurement
 dimension. Our desired output therefore needs a single column with all
 of the reshaped numeric data to plot (Figure~\ref{fig:wide-to-tall},
-W$\rightarrow$S). We can perform this operation using
-\code{nc::capture\_melt\_single}, which inputs a data frame and a
-pattern which should match the names of the input columns to
-reshape. Any input columns with names that do not match the pattern
-are considered copy columns; the output also contains a capture column
-for each group specified in the pattern:
+W$\rightarrow$S).
+
+We can perform this operation using \code{nc::capture\_melt\_single},
+which inputs a data frame and a pattern which should match the names
+of the input columns to reshape. Any input columns with names that do
+not match the pattern are considered copy columns; the output also
+contains a capture column for each group specified in the pattern:
 
 <<irisSingle>>= 
 (iris.tall.single <- nc::capture_melt_single(
   iris, part = ".*", "[.]", dim = ".*", value.name = "cm"))
 @
 
-The output above consists of one copy column (\code{Species}), two
-capture columns (\code{part}, \code{dim}), and a single reshape column
-(\code{cm}). The \code{value.name} argument is not considered part of
-the pattern, and instead specifies the name of the output reshape
-column. These data can be used to create the desired histogram with
-\pkg{ggplot2} via:
+The code above can be read as follows. The first argument \code{iris}
+specifies the wide input data table to reshape. The next three
+arguments (\code{part = ".*",} \code{"[.]",} \code{dim = ".*"})
+specify the regex. Internally \pkg{nc} generates a capture group for
+each named argument, so the generated regex pattern is
+\code{(.*)[.](.*)} in this example. The \code{value.name} argument is
+not considered part of the regex, and instead specifies the name of
+the output reshape column.
+
+The output above is a data table (a data frame subclass with special
+methods that have reference semantics) because
+\code{data.table::melt} is used internally for the reshape
+operation. The output data table consists of one copy column
+(\code{Species}), two capture columns (\code{part}, \code{dim}), and a
+single reshape column (\code{cm}). These data can be used to create
+the desired histogram with \pkg{ggplot2} via:
 
 <<hist, fig = TRUE, height = 2.2, width = 5>>= 
 library(ggplot2)
@@ -570,6 +354,45 @@ ggplot(iris.tall.single) + facet_grid(part~dim) +
   theme_bw() + theme(panel.spacing = grid::unit(0, "lines")) +
   geom_histogram(aes(cm, fill = Species), color = "black", bins = 40)
 @
+
+For comparison, we show how the same reshape operation can be
+accomplished with the \pkg{data.table} package,
+
+<<singleCompare>>=
+iris.pattern <- "(.*)[.](.*)"
+iris.wide <- data.table::as.data.table(iris)
+iris.tall <- data.table::melt(
+  iris.wide, measure=patterns(iris.pattern), value.name = "cm")
+iris.tall[, `:=`(
+  part = sub(iris.pattern, "\\1", variable),
+  dim  = sub(iris.pattern, "\\2", variable))]
+@
+
+The code above uses \code{data.table::melt} with \code{patterns} which
+takes a regex used to specify the four columns to reshape. The \code{part}
+and \code{dim} capture columns must be created during a post-processing
+step. In this case the \pkg{nc} code is substantially simpler because
+the named capture regular expression was used to specify both the
+input columns to reshape, and the capture columns to output.
+
+Finally we show how the same reshape operation could be done using the
+\pkg{tidyr} package,
+
+<<singleCompareTidyr>>=
+tidyr::pivot_longer(iris, matches(iris.pattern), values_to = "cm",
+  names_to=c("part", "dim"), names_pattern=iris.pattern)
+@
+
+The code above is almost as simple as the corresponding \pkg{nc} code,
+but with one key difference. The output capture column names are
+defined in the \code{names\_to} argument, which is far away from the
+definition of the groups in \code{iris.pattern}. In this simple example
+with two groups in the regex this separation of related concepts is
+not a huge problem, but the \pkg{nc} syntax should be preferred for
+more complex patterns (with more groups) in order to keep the group
+names and sub-patterns closer and easier to maintain/read in the code.
+
+\subsection{Multiple reshape output columns}
 
 For the second data reshaping task, suppose we want to determine
 whether or not sepals are larger than petals, for each measurement
@@ -601,8 +424,21 @@ ggplot(iris.parts) + facet_grid(.~dim) +
   geom_point(aes(Petal, Sepal, color = Species), shape = 1)
 @
 
-It is clear from the plot that sepals are larger than petals, for
-both dimensions, and for every measured flower.
+For comparison, we show how to output a data table with multiple
+reshape output columns using the \pkg{data.table} and \pkg{tidyr}
+packages,
+
+<<multCompare>>=
+iris.multiple <- data.table::melt(
+  iris.wide, measure=patterns(Petal="Petal", Sepal="Sepal"))
+iris.multiple[, dim := c("Length", "Width")[variable] ]
+tidyr::pivot_longer(iris, matches(iris.pattern), values_to = "cm",
+  names_to=c(".value", "dim"), names_pattern=iris.pattern)
+@
+
+The code above computes an equivalent result, but suffers from the
+same drawbacks as discussed in the previous section (repetition,
+separation of pattern and group names).
 
 To conclude this section, \pkg{nc} provides two new functions for data
 reshaping using regular expressions. Both functions input a data
@@ -794,12 +630,7 @@ melt(TC, measure.vars = list(age = c(1,4), gender = c(3,2)))
 
 This is what \pkg{nc} does internally; it also converts the
 \code{variable} output column to a more interpretable/useful capture
-column (e.g., \code{group} above). As a result of this research we have
-proposed the following new feature for the \pkg{data.table} package,
-
-<<dtmeasure>>=
-melt(TC, measure.vars = measure(group, value.name, sep="."))
-@ 
+column (e.g., \code{group} above).
 
 The \code{stats::reshape} function suffers from the same issue as the
 \code{patterns} usage above. Another issue with this
@@ -881,9 +712,12 @@ implemented using \pkg{data.table}, we expect that \pkg{nc} should be
 slightly slower than \pkg{data.table} (by only constant factors). In
 our result figures we show the median and quartiles over 10 timings
 using the \CRANpkg{microbenchmark} package on an Intel Core i7-8700
-3.20GHz processor. We varied the number of rows/columns in each
-experiment by copying/duplicating the rows/columns in each source data
-set. The package versions that we used were:
+3.20GHz processor. Note that these timings include both the regex
+matching (which should be relatively fast) and the data reshaping
+operation (which should be relatively slow). We varied the number of
+rows/columns in each experiment by copying/duplicating the
+rows/columns in each source data set. The package versions that we
+used were:
 
 
 <<packageVersions>>=
@@ -1056,6 +890,14 @@ similar or faster speeds than comparable R packages.
 
 \section{Discussion and conclusions}
 
+Future work TODO tidyr default when names\_pattern.... As a result of this research we have
+proposed the following new feature for the \pkg{data.table} package,
+
+<<dtmeasure>>=
+melt(TC, measure.vars = measure(group, value.name, sep="."))
+@ 
+
+
 In this paper we described the \pkg{nc} package and its new functions
 for regular expressions and data reshaping. The \pkg{nc} package
 allows a user to define a regular expression in R code, along with
@@ -1136,9 +978,6 @@ using the efficient implementation in \code{data.table::dcast}. For
 future work, we will be interested to explore other operations related to
 machine learning and data visualization which could be simplified
 using regular expressions.
-
-\paragraph{Acknowledgements.} Thanks to Marc Tollis for providing the
-example data output from the SweeD program.
 
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from
