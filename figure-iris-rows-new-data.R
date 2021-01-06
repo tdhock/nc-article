@@ -49,11 +49,13 @@ for(N.row in N.row.new){
         names_pattern=iris.pattern.args$pattern)
     },
     "data.table::melt"={
-      data.table::melt(
+      dt <- data.table::melt(
         some.iris,
-        measure=data.table:::measure(
-          day=as.integer, value.name, dim,
-          pattern=iris.pattern.args$pattern))
+        measure=patterns(Petal="Petal", Sepal="Sepal"))
+      pnames <- grep("Petal", names(some.iris), value=TRUE)
+      dt[, day := as.integer(gsub("[^0-9]", "", pnames))[variable] ]
+      dt[, dim := sub(".*[.]", "", pnames)[variable] ]
+      dt
     }
   ), if(N.row < 1e6)do.sub(
     "cdata::rowrecs_to_blocks"={
@@ -91,7 +93,7 @@ for(N.row in N.row.new){
   m.result <- do.call(microbenchmark, m.args)
   lapply(result.list, names)
   timing.dt.list[[paste(N.row)]] <- data.table(N.row, m.result)
-  ref.name <- "data.table::melt"
+  ref.name <- "nc::capture_melt_multiple"
   name.vec <- names(result.list[[ref.name]])
   ord.dt.list <- list()
   for(compare.name in names(result.list)){

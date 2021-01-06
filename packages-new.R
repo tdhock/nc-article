@@ -64,15 +64,15 @@ options(repos=c(
           "http://r-forge.r-project.org",
           "http://cloud.r-project.org"))
 works_with_R(
-  "4.0.2",
+  "4.0.3",
   bit64="4.0.5",
-  "Rdatatable/data.table@dfae9e2d060a138e8f2c27b7046ffc570254a36b",
+  data.table="1.13.6",
   tidyfast="0.2.1",
   quadprog="1.5.8",
-  "tdhock/directlabels@f690edf6db2790960aa00ca388b7e11da74bf783",
+  directlabels="2020.12.29",
   microbenchmark="1.4.7",
   ggplot2="3.3.2",
   tidyr="1.1.2",
-  "tdhock/nc@8bca3b47a44481e084d1acabd1a3dd4c945044d1",
+  nc="2020.8.6",
   reshape2="1.4.4",
   cdata="1.1.8")

@@ -83,7 +83,8 @@ dl <- ggplot()+
     breaks=10^seq(2, 5),
     limits=stats.timings[, c(min(N.rows), max(N.rows)*100)])+
   scale_y_log10(
-    "Computation time (seconds)")
+    "Computation time (seconds)",
+    limits=c(NA, 1e2))
 pdf("figure-who-rows-new.pdf", 9, 4)
 print(dl)
 dev.off()

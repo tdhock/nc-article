@@ -50,10 +50,13 @@ for(N.rep in N.rep.vec){
         names_pattern=iris.pattern.args$pattern)
     },
     "data.table::melt"={
-      data.table::melt(
+      dt <- data.table::melt(
         some.iris,
-        measure=data.table:::measure(
-          before=as.integer, value.name, dim, sep="."))
+        measure=patterns(Petal="Petal", Sepal="Sepal"))
+      pnames <- grep("Petal", names(some.iris), value=TRUE)
+      dt[, before := as.integer(gsub("[^0-9]", "", pnames))[variable] ]
+      dt[, dim := sub(".*[.]", "", pnames)[variable] ]
+      dt
     },
     "cdata::rowrecs_to_blocks"={
       part.list <- list()
@@ -88,7 +91,7 @@ for(N.rep in N.rep.vec){
   m.result <- do.call(microbenchmark, m.args)
   lapply(result.list, names)
   timing.dt.list[[paste(N.rep)]] <- data.table(N.rep, N.col, m.result)
-  ref.name <- "data.table::melt"
+  ref.name <- "nc::capture_melt_multiple"
   name.vec <- names(result.list[[ref.name]])
   ord.dt.list <- list()
   for(compare.name in names(result.list)){

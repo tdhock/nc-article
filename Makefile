@@ -1,4 +1,5 @@
 RJwrapper.pdf: hocking.tex hocking.bib figure-1-iris.pdf figure-who-cols-new.png figure-who-rows-new.png figure-iris-cols-new.png figure-iris-rows-new.png
+	rm -f RJwrapper.aux RJwrapper.bbl
 	R -e "tools::texi2pdf('RJwrapper.tex')"
 RJwrapper-reproduced.pdf: RJwrapper.pdf
 	mkdir -p submission

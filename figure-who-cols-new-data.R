@@ -38,6 +38,23 @@ do.sub <- function(...){
   L
 }
 
+## this seems to be the fastest way to add capture columns to the
+## melted data table. it is important to run the regex function (sub)
+## on the unique values in the variable column, instead of running it
+## on the variable column (which contains repeated variable names).
+dt.add.vars <- function(DT){
+  name.vec <- paste(unique(DT$variable))
+  for(group.i in seq_along(who.pattern.args$fun.list)){
+    group.name <- names(who.pattern.args$fun.list)[[group.i]]
+    group.fun <- who.pattern.args$fun.list[[group.i]]
+    value <- group.fun(sub(
+      who.pattern.args$pattern, paste0("\\", group.i), name.vec))
+    names(value) <- name.vec
+    set(DT, j=group.name, value=value[DT$variable])
+  }
+  DT
+} 
+
 df.add.vars <- function(g.result, variable.name="variable"){
   for(group.i in seq_along(who.pattern.args$fun.list)){
     group.name <- names(who.pattern.args$fun.list)[[group.i]]
@@ -133,16 +150,10 @@ for(N.rep in N.rep.vec){
           some.who, variable=who.pattern.no.groups)
       },
       "tidyfast::dt_pivot_longer-4"={
-        DT <- tidyfast::dt_pivot_longer(
+        dt.add.vars(tidyfast::dt_pivot_longer(
           some.who,
-          grep(who.pattern.args$pattern, names(some.who)))
-        for(group.i in seq_along(who.pattern.args$fun.list)){
-          group.name <- names(who.pattern.args$fun.list)[[group.i]]
-          group.fun <- who.pattern.args$fun.list[[group.i]]
-          set(DT, j=group.name, value=group.fun(sub(
-            who.pattern.args$pattern, paste0("\\", group.i), DT$name)))
-        }
-        DT
+          grep(who.pattern.args$pattern, names(some.who)),
+          names_to="variable"))
       },
       "tidyfast::dt_pivot_longer-0"={
         tidyfast::dt_pivot_longer(
@@ -151,15 +162,13 @@ for(N.rep in N.rep.vec){
       },
       "data.table::melt-0"={
         data.table::melt.data.table(
-          if(is.data.table(some.who))some.who else as.data.table(some.who),
+          some.who,
           measure.vars=patterns(who.pattern.args$pattern))
       },
       "data.table::melt-4"={
-        data.table::melt.data.table(
-          if(is.data.table(some.who))some.who else as.data.table(some.who),
-          measure.vars=data.table:::measure(
-            before=as.integer, diagnosis, gender, ages,
-            pattern=who.pattern.args$pattern))
+        dt.add.vars(data.table::melt.data.table(
+          some.who,
+          measure.vars=patterns(who.pattern.args$pattern)))
       }
     ),
     if(N.rep < Inf)do.sub(
@@ -234,5 +243,3 @@ for(N.rep in N.rep.vec){
 
 timing.dt <- do.call(rbind, timing.dt.list)
 fwrite(timing.dt, "figure-who-cols-new-data.csv")
-
-
