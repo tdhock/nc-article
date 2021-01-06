@@ -771,7 +771,7 @@ rows. The fastest functions were \code{data.table::melt} and
 rows). As expected, for four capture output columns the functions
 which require post-processing were slower, and the fastest functions
 were \code{data.table::melt} and
-\code{nc::capture\_melt\_multiple}. 
+\code{nc::capture\_melt\_single}. 
 
 % rfig2
 \begin{figure}
@@ -820,7 +820,7 @@ surprised to observe in our empirical timings that the \pkg{cdata}
 package appears to have asymptotic time complexity that is
 super-linear in the number of columns to reshape. This result suggests
 that the speed of \pkg{cdata} could be improved by adopting one of the
-linear time algorithms used in the other packages.
+linear time reshaping algorithms used in the other packages.
 
 The \code{tidyr::pivot\_longer} function provides a feature set which
 is most similar to \pkg{nc} data reshaping functions. We showed that
@@ -829,7 +829,7 @@ both packages can perform the same data reshaping operations, but
 code. Another advantage is that \pkg{nc} R code allows sub-pattern
 lists which contain group names, regex patterns, and type conversion
 functions, whereas in \pkg{tidyr} these three related pieces of
-information must be defined in sepearate arguments. Therefore \pkg{nc} syntax
+information must be defined in seperate arguments. Therefore \pkg{nc} syntax
 may be preferable in order to ease definition of complex patterns, and
 to avoid repetition in user code.
 
@@ -882,8 +882,8 @@ post-processing steps to output capture columns. As a result of this
 research we have proposed changes to
 \code{data.table::melt}\footnote{\url{https://github.com/Rdatatable/data.table/pull/4731}}
 that allow efficient specification and output of capture
-columns. Since \pkg{nc} uses \pkg{data.table} internally, these
-changes also result in speedups for \pkg{nc} functions.
+columns. Since \pkg{nc} uses \pkg{data.table} internally, we plan to eventuall use these
+changes for speedups of \pkg{nc} functions.
 
 \paragraph{Reproducible research statement.} The source code for this
 article can be freely downloaded from
