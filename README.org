@@ -1,18 +1,19 @@
 ** Paper
 
-Title: Regular expressions and reshaping using data tables and the
+Title: Wide-to-tall data reshaping using regular expressions and the
   [[https://github.com/tdhock/nc][nc]] package
 
 Abstract: Regular expressions are powerful tools for extracting tables
   from non-tabular text data. Capturing regular expressions that
   describe information to extract from column names can be especially
-  useful when reshaping a data table from wide (one row with many
-  columns) to tall (one column with many rows). We present the R
-  package nc (short for named capture), which provides functions for
-  data reshaping, regular expressions, and a uniform interface to
-  three C libraries (PCRE, RE2, ICU). We describe the main features of
-  nc, then provide detailed comparisons with related R packages
-  (stats, utils, data.table, tidyr, reshape2, cdata).
+  useful when reshaping a data table from wide (few rows with many
+  regularly named columns) to tall (fewer columns with more rows). We
+  present the R package nc (short for named capture), which
+  provides functions for wide-to-tall data reshaping using regular
+  expressions. We describe the main new ideas of nc, and
+  provide detailed comparisons with related R packages (stats,
+  utils, data.table, tidyr, tidyfast,
+  tidyfst, reshape2, cdata).
 
 - Output [[file:RJwrapper.pdf]]  
 - Main input/source file to edit is [[file:hocking.Rnw]] 
@@ -20,7 +21,7 @@ Abstract: Regular expressions are powerful tools for extracting tables
 
 ** TODOs
 
-compare with tidyfst::longer_dt?
+compare with tidyfst::longer_dt? should be same as data.table::melt.
 https://hope-data-science.github.io/tidyfst/articles/example3_reshape.html
 
 ** 11 Oct 2020

@@ -1,9 +1,9 @@
 RJwrapper.pdf: hocking.tex hocking.bib figure-1-iris.pdf figure-who-cols-new.png figure-who-rows-new.png figure-iris-cols-new.png figure-iris-rows-new.png
-	rm -f RJwrapper.aux RJwrapper.bbl
+	rm -f RJwrapper.aux RJwrapper.bbl	b
 	R -e "tools::texi2pdf('RJwrapper.tex')"
 RJwrapper-reproduced.pdf: RJwrapper.pdf
 	mkdir -p submission
-	cp hocking.bib hocking.Rnw hocking.tex letter-to-editor.pdf Makefile RJwrapper.pdf RJwrapper.tex *.R figure-*.rds figure-*.pdf submission
+	cp hocking.bib hocking.Rnw hocking.tex letter-to-editor.pdf reviewer-response.pdf README.txt Makefile RJwrapper.pdf RJwrapper.tex *.R figure-*.csv figure-*.png *.bib submission 
 	rm -f submission.zip
 	zip submission submission/*
 	rm -rf /tmp/submission* && cp submission.zip RJournal.sty /tmp
