@@ -1,7 +1,9 @@
 ** Paper
 
 Title: Wide-to-tall data reshaping using regular expressions and the
-  [[https://github.com/tdhock/nc][nc]] package
+  [[https://github.com/tdhock/nc][nc]] package.
+
+[[https://journal.r-project.org/archive/2021/RJ-2021-029/index.html][Published in R Journal]].
 
 Abstract: Regular expressions are powerful tools for extracting tables
   from non-tabular text data. Capturing regular expressions that
@@ -15,7 +17,7 @@ Abstract: Regular expressions are powerful tools for extracting tables
   utils, data.table, tidyr, tidyfast,
   tidyfst, reshape2, cdata).
 
-- Output [[file:RJwrapper.pdf]]  
+- Local output [[file:RJwrapper.pdf]]
 - Main input/source file to edit is [[file:hocking.Rnw]] 
 - [[file:Makefile]] takes care of creating [[file:submission.zip]]
 
