@@ -26,6 +26,11 @@ Abstract: Regular expressions are powerful tools for extracting tables
 compare with tidyfst::longer_dt? should be same as data.table::melt.
 https://hope-data-science.github.io/tidyfst/articles/example3_reshape.html
 
+** 8 Nov 2023
+
+[[file:figure-iris-dt]] contains figures to explain melt, for [[https://docs.google.com/presentation/d/1ypW1LUMmcrUTMF6B9h9s8qbvW5BSbN1IW6CEgqX01Co/edit#slide=id.g28a0c5c675a_0_0][LatinR
+data.table tutorial]].
+
 ** 11 Oct 2020
 
 [[file:figure-who-cols-new-data.R]] runs new timings and
